@@ -31,7 +31,6 @@ void CONSOLE_IRQHandler()
 		static uint16_t result_word;
 
 		result_word = USART_ReceiveData(CONSOLE);
-		console_bputc((uint8_t)result_word);
 
 		if(!ring_buffer_enQ(&console_rx_buff, (uint8_t)result_word))
 		{
@@ -60,6 +59,15 @@ int __io_putchar(int ch)
 {
 	console_bputc(ch);
 	return 0;
+}
+
+int __io_getchar(void)
+{
+	uint8_t input_char;
+	while(!ring_buffer_deQ(&console_rx_buff, &input_char));
+	console_bputc(input_char);
+
+	return input_char;
 }
 
 // Private function definition
@@ -143,12 +151,13 @@ void console_init()
 	_nvic_config();
 	_uart_config();
 
+	/* Disable stdin buffering, scanf will be called
+	 * until EOF(0x0d) is received. After that the received
+	 * string will be parsed in the desired format defined
+	 * inside scanf function */
 	setvbuf(stdin, NULL, _IONBF, 0);
 
 	printf("Console initialized...\r\n\r\n");
-	scanf("%d", &a);
-
-	printf("\r\na = %d", a);
 }
 
 static void console_bputc(uint8_t c)
