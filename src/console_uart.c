@@ -144,8 +144,6 @@ static void _nvic_config()
 // Public functions
 void console_init()
 {
-	int a;
-
 	_rcc_config();
 	_gpio_config();
 	_nvic_config();

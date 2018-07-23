@@ -15,14 +15,14 @@
 #include "htec_ring_buffer.h"
 #include "stdio.h"
 
-#define CONSOLE					USART1
-#define CONSOLE_GPIO           	GPIOB
-#define CONSOLE_CLK            	RCC_APB2Periph_USART1
-#define CONSOLE_GPIO_CLK        RCC_APB2Periph_GPIOB
-#define CONSOLE_RxPin           GPIO_Pin_7
-#define CONSOLE_TxPin           GPIO_Pin_6
-#define CONSOLE_IRQn            USART1_IRQn
-#define CONSOLE_IRQHandler      USART1_IRQHandler
+#define CONSOLE					USART1					/*!< The UART port the is used ad console one */
+#define CONSOLE_GPIO           	GPIOB					/*!< The port the CONSOLE is connected to */
+#define CONSOLE_CLK            	RCC_APB2Periph_USART1	/*!< The CONSOLE peripheral clock definition */
+#define CONSOLE_GPIO_CLK        RCC_APB2Periph_GPIOB	/*!< The gpio peripheral clock definition */
+#define CONSOLE_RxPin           GPIO_Pin_7				/*!< The Console receive pin definition */
+#define CONSOLE_TxPin           GPIO_Pin_6				/*!< The Console transmit pin definition */
+#define CONSOLE_IRQn            USART1_IRQn				/*!< The Console interrupt vector address */
+#define CONSOLE_IRQHandler      USART1_IRQHandler		/*!< The Console interrupt handler function */
 
 /**
  * The function initialize UART console
