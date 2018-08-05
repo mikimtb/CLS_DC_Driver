@@ -11,6 +11,8 @@
 #include "stm32f10x.h"
 #include "stm32f10x_spi.h"
 #include <stdbool.h>
+#include "definitions.h"
+#include "console_uart.h"
 
 #define SPI_PORT			USART1					/*!< The SPI port that is used */
 #define SPI_GPIO           	GPIOB					/*!< The GPIO port that is connected to the SPI interface */
@@ -22,5 +24,11 @@
 #define SPI_CS_PIN									/*!< The SPI CS pin definition */
 #define SPI_IRQn            USART1_IRQn				/*!< The SPI interrupt vector address */
 #define SPI_IRQHandler      USART1_IRQHandler		/*!< The SPI interrupt handler function */
+
+
+// Public functions definition
+void spi_init(void);
+bool spi_bputc(uint16_t data);
+bool spi_bgetc(uint16_t * data);
 
 #endif /* USER_SPI_H_ */

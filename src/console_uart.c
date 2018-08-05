@@ -54,7 +54,34 @@ void CONSOLE_IRQHandler()
 	}
 }
 
-// Public function definition
+// Public functions implementation
+void console_init()
+{
+	_console_rcc_config();
+	_console_gpio_config();
+	_console_nvic_config();
+	_console_uart_config();
+
+	/* Disable stdin buffering, scanf will be called
+	 * until EOF(0x0d) is received. After that the received
+	 * string will be parsed in the desired format defined
+	 * inside scanf function */
+	setvbuf(stdin, NULL, _IONBF, 0);
+
+	printf("Console initialized...\r\n\r\n");
+}
+
+static void _console_bputc(uint8_t c)
+{
+	bool restart = ring_buffer_isEmpty(&console_tx_buff);
+	while(!ring_buffer_enQ(&console_tx_buff, c));
+	if(restart)
+	{
+		USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
+	}
+}
+
+// Weak function implementation
 int __io_putchar(int ch)
 {
 	_console_bputc(ch);
@@ -70,7 +97,7 @@ int __io_getchar(void)
 	return input_char;
 }
 
-// Private function definition
+// Private function implementation
 static void _console_rcc_config()
 {
 	/* Enable GPIO clock */
@@ -139,33 +166,6 @@ static void _console_nvic_config()
 	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 1;
 	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStruct);
-}
-
-// Public functions
-void console_init()
-{
-	_console_rcc_config();
-	_console_gpio_config();
-	_console_nvic_config();
-	_console_uart_config();
-
-	/* Disable stdin buffering, scanf will be called
-	 * until EOF(0x0d) is received. After that the received
-	 * string will be parsed in the desired format defined
-	 * inside scanf function */
-	setvbuf(stdin, NULL, _IONBF, 0);
-
-	printf("Console initialized...\r\n\r\n");
-}
-
-static void _console_bputc(uint8_t c)
-{
-	bool restart = ring_buffer_isEmpty(&console_tx_buff);
-	while(!ring_buffer_enQ(&console_tx_buff, c));
-	if(restart)
-	{
-		USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
-	}
 }
 
 #endif
