@@ -68,7 +68,7 @@ void console_init()
 	 * inside scanf function */
 	setvbuf(stdin, NULL, _IONBF, 0);
 
-	printf("Console initialized...\r\n\r\n");
+	printf("Console is initialized...\r\n\r\n");
 }
 
 static void _console_bputc(uint8_t c)
@@ -154,12 +154,6 @@ static void _console_nvic_config()
 
 	/* Configure the NVIC Preemption Priority Bits */
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_0);
-
-	/* Enable the USARTy Interrupt */
-	NVIC_InitStruct.NVIC_IRQChannel = CONSOLE_IRQn;
-	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0;
-	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStruct);
 
 	/* Enable the USART1 Interrupt */
 	NVIC_InitStruct.NVIC_IRQChannel = CONSOLE_IRQn;

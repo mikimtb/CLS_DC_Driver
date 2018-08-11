@@ -12,6 +12,7 @@
 #include "stm32f10x.h"
 //#include "stm32f10x_gpio.h"
 #include "console_uart.h"
+#include "user_spi.h"
 #include "control_loop.h"
 
 //void gpio_led_init()
@@ -30,13 +31,24 @@
 int main(void)
 {
 
+//	RCC_ClocksTypeDef RCC_Clocks;
+//	RCC_PCLK2Config(RCC_HCLK_Div2);
+//	RCC_GetClocksFreq(&RCC_Clocks);
+	uint16_t spi_data = 0;
+	uint16_t pom_counter = 0;
 	delay_init();
 	//gpio_led_init();
 	console_init();
+
 	//GPIO_ResetBits(GPIOC, GPIO_Pin_13);
+	spi_init();
 
 	while (1)
 	{
+		delay_ms(10);
+
+		spi_data = spi_transfer(pom_counter);
+		pom_counter++;
 //		GPIO_SetBits(GPIOC, GPIO_Pin_13);
 //		//GPIOC->BSRR |= 1 << 13;
 //		//GPIO_WriteBit(GPIOC, GPIO_Pin_13, Bit_RESET);
