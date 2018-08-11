@@ -9,11 +9,11 @@
 #ifdef USE_UART_CONSOLE
 
 // Private functions
-static void _rcc_config();
-static void _gpio_config();
-static void _uart_config();
-static void _nvic_config();
-static void console_bputc(uint8_t c);
+static void _console_rcc_config();
+static void _console_gpio_config();
+static void _console_uart_config();
+static void _console_nvic_config();
+static void _console_bputc(uint8_t c);
 
 // Private variables
 CIRCBUFF_DEF(console_tx_buff, CONSOLE_BUFFER_SIZE);
@@ -54,10 +54,37 @@ void CONSOLE_IRQHandler()
 	}
 }
 
-// Public function definition
+// Public functions implementation
+void console_init()
+{
+	_console_rcc_config();
+	_console_gpio_config();
+	_console_nvic_config();
+	_console_uart_config();
+
+	/* Disable stdin buffering, scanf will be called
+	 * until EOF(0x0d) is received. After that the received
+	 * string will be parsed in the desired format defined
+	 * inside scanf function */
+	setvbuf(stdin, NULL, _IONBF, 0);
+
+	printf("Console is initialized...\r\n\r\n");
+}
+
+static void _console_bputc(uint8_t c)
+{
+	bool restart = ring_buffer_isEmpty(&console_tx_buff);
+	while(!ring_buffer_enQ(&console_tx_buff, c));
+	if(restart)
+	{
+		USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
+	}
+}
+
+// Weak function implementation
 int __io_putchar(int ch)
 {
-	console_bputc(ch);
+	_console_bputc(ch);
 	return 0;
 }
 
@@ -65,13 +92,13 @@ int __io_getchar(void)
 {
 	uint8_t input_char;
 	while(!ring_buffer_deQ(&console_rx_buff, &input_char));
-	console_bputc(input_char);
+	_console_bputc(input_char);
 
 	return input_char;
 }
 
-// Private function definition
-static void _rcc_config()
+// Private function implementation
+static void _console_rcc_config()
 {
 	/* Enable GPIO clock */
 	RCC_APB2PeriphClockCmd(CONSOLE_GPIO_CLK | RCC_APB2Periph_AFIO, ENABLE);
@@ -80,7 +107,7 @@ static void _rcc_config()
 	RCC_APB2PeriphClockCmd(CONSOLE_CLK, ENABLE);
 }
 
-static void _gpio_config()
+static void _console_gpio_config()
 {
 	GPIO_InitTypeDef GPIO_InitStruct;
 
@@ -99,7 +126,7 @@ static void _gpio_config()
 	GPIO_Init(CONSOLE_GPIO, &GPIO_InitStruct);
 }
 
-static void _uart_config()
+static void _console_uart_config()
 {
 	USART_InitTypeDef USART_InitStruct;
 
@@ -121,51 +148,18 @@ static void _uart_config()
 	USART_Cmd(CONSOLE, ENABLE);
 }
 
-static void _nvic_config()
+static void _console_nvic_config()
 {
 	NVIC_InitTypeDef NVIC_InitStruct;
 
 	/* Configure the NVIC Preemption Priority Bits */
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_0);
 
-	/* Enable the USARTy Interrupt */
-	NVIC_InitStruct.NVIC_IRQChannel = CONSOLE_IRQn;
-	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0;
-	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStruct);
-
 	/* Enable the USART1 Interrupt */
 	NVIC_InitStruct.NVIC_IRQChannel = CONSOLE_IRQn;
 	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 1;
 	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStruct);
-}
-
-// Public functions
-void console_init()
-{
-	_rcc_config();
-	_gpio_config();
-	_nvic_config();
-	_uart_config();
-
-	/* Disable stdin buffering, scanf will be called
-	 * until EOF(0x0d) is received. After that the received
-	 * string will be parsed in the desired format defined
-	 * inside scanf function */
-	setvbuf(stdin, NULL, _IONBF, 0);
-
-	printf("Console initialized...\r\n\r\n");
-}
-
-static void console_bputc(uint8_t c)
-{
-	bool restart = ring_buffer_isEmpty(&console_tx_buff);
-	while(!ring_buffer_enQ(&console_tx_buff, c));
-	if(restart)
-	{
-		USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
-	}
 }
 
 #endif

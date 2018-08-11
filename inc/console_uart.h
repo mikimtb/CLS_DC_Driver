@@ -15,7 +15,7 @@
 #include "htec_ring_buffer.h"
 #include "stdio.h"
 
-#define CONSOLE					USART1					/*!< The UART port the is used ad console one */
+#define CONSOLE					USART1					/*!< The UART port that is used as a console one */
 #define CONSOLE_GPIO           	GPIOB					/*!< The port the CONSOLE is connected to */
 #define CONSOLE_CLK            	RCC_APB2Periph_USART1	/*!< The CONSOLE peripheral clock definition */
 #define CONSOLE_GPIO_CLK        RCC_APB2Periph_GPIOB	/*!< The gpio peripheral clock definition */
