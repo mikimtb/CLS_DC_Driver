@@ -13,6 +13,7 @@
 //#include "stm32f10x_gpio.h"
 #include "console_uart.h"
 #include "user_spi.h"
+#include "user_pwm.h"
 #include "control_loop.h"
 
 //void gpio_led_init()
@@ -43,12 +44,27 @@ int main(void)
 	//GPIO_ResetBits(GPIOC, GPIO_Pin_13);
 	spi_init();
 
+	pwm_init(15000);
+	pwm_set_pulse_width(1200, 1200);
+	delay_ms(10);
+	pwm_enable(ENABLE);
+
 	while (1)
 	{
-		delay_ms(10);
-
+		delay_ms(1);
+		if(pom_counter < 1199)
+		{
+			pwm_set_pulse_width(1200 + pom_counter, 1200 - pom_counter);
+			pom_counter++;
+		}
+		else
+		{
+			pom_counter = 0;
+			pwm_enable(DISABLE);
+			delay_ms(2000);
+			pwm_enable(ENABLE);
+		}
 		spi_data = spi_transfer(pom_counter);
-		pom_counter++;
 //		GPIO_SetBits(GPIOC, GPIO_Pin_13);
 //		//GPIOC->BSRR |= 1 << 13;
 //		//GPIO_WriteBit(GPIOC, GPIO_Pin_13, Bit_RESET);
