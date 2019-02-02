@@ -4,7 +4,7 @@
  *  Created on: Jul 15, 2018
  *      Author: Miroslav Bozic
  */
-#include "control_loop.h"
+#include <user_delay.h>
 
 volatile uint32_t _millis = 0;		/*!< Global variable that keeps system time */
 

@@ -9,13 +9,28 @@
 */
 
 
+#include <user_delay.h>
 #include "stm32f10x.h"
+#include <string.h>
 //#include "stm32f10x_gpio.h"
 #include "console_uart.h"
-#include "user_spi.h"
 #include "user_pwm.h"
-#include "control_loop.h"
+#include "user_button.h"
+#include "user_beeper.h"
+#include "user_brake.h"
+#include "tm1637.h"
+#include "as5040.h"
 
+void on_b1_press(void);
+void on_b1_long_press(void);
+void on_b1_click(void);
+
+void on_b2_press(void);
+void on_b2_long_press(void);
+void on_b2_click(void);
+
+button_t *b1;
+button_t *b2;
 //void gpio_led_init()
 //{
 //	GPIO_InitTypeDef  GPIO_InitStruct;
@@ -31,49 +46,110 @@
 
 int main(void)
 {
-
-//	RCC_ClocksTypeDef RCC_Clocks;
-//	RCC_PCLK2Config(RCC_HCLK_Div2);
-//	RCC_GetClocksFreq(&RCC_Clocks);
 	uint16_t spi_data = 0;
 	uint16_t pom_counter = 0;
+
+
 	delay_init();
 	//gpio_led_init();
 	console_init();
 
+	brake_init();
 	//GPIO_ResetBits(GPIOC, GPIO_Pin_13);
-	spi_init();
-
+	//spi_init();
+//
 	pwm_init(15000);
 	pwm_set_pulse_width(1200, 1200);
 	delay_ms(10);
-	pwm_enable(ENABLE);
+
+	pwm_set_pulse_width(1200-500, 1200+500);
+
+	pwm_driver_enable(true);
+
+	beeper_init();
+
+	TM1637_init();
+	//TM1637_brightness(0);
+
+	b1 = button_create("START", RCC_APB2Periph_GPIOB, GPIOB, GPIO_Pin_12, ACTIVE_LOW, 50, 2000, on_b1_press, on_b1_click, on_b1_long_press);
+	b2 = button_create("STOP", RCC_APB2Periph_GPIOB, GPIOB, GPIO_Pin_13, ACTIVE_LOW, 50, 1000, on_b2_press, on_b2_click, on_b2_long_press);
+
+//	TM1637_display_number(9999, COLON_OFF);
+//	TM1637_clear_display();
+//	TM1637_display_number(-999, COLON_OFF);
+//	TM1637_on_off(DISP_OFF);
+//	TM1637_on_off(DISP_ON);
+//	TM1637_set_brightness(1);
+//	TM1637_set_brightness(2);
+//	TM1637_set_brightness(3);
+//	TM1637_set_brightness(4);
+//	TM1637_set_brightness(5);
+//	TM1637_set_brightness(6);
+//	TM1637_set_brightness(7);
+//	TM1637_set_brightness(8);
+//	TM1637_display(0, 'A');
+//	TM1637_clear_display();
+//	TM1637_display(0, '-');
+//	TM1637_display(1, '-');
+//	TM1637_display(2, '-');
+//	TM1637_display(3, '-');
+//	TM1637_display_time(12, 54);
+
+	//brake_control(DEACTIVATE);
+	as5040_init(READ_INCREMENTAL, 1023);
+	delay_ms(500);
+	//TM1637_clearDisplay();
 
 	while (1)
 	{
-		delay_ms(1);
-		if(pom_counter < 1199)
-		{
-			pwm_set_pulse_width(1200 + pom_counter, 1200 - pom_counter);
-			pom_counter++;
-		}
-		else
-		{
-			pom_counter = 0;
-			pwm_enable(DISABLE);
-			delay_ms(2000);
-			pwm_enable(ENABLE);
-		}
-		spi_data = spi_transfer(pom_counter);
-//		GPIO_SetBits(GPIOC, GPIO_Pin_13);
-//		//GPIOC->BSRR |= 1 << 13;
-//		//GPIO_WriteBit(GPIOC, GPIO_Pin_13, Bit_RESET);
-//		//GPIOC->ODR ^= 1 << 13;
-//		delay_ms(1000);
-//		GPIO_ResetBits(GPIOC, GPIO_Pin_13);
-//		//GPIOC->BRR |= 1 << 13;
-//		//GPIO_WriteBit(GPIOC, GPIO_Pin_13, Bit_SET);
-//		//GPIOC->ODR ^= 1 << 13;
-//		delay_ms(1000);
+//		spi_data = as5040_get_angular_position();
+//		printf("%u\r\n", spi_data);
+		spi_data = as5040_get_angular_position();
+		printf("%u\r\n", spi_data);
+
+//		TM1637_clear_display();
+//		delay_ms(250);
+//		TM1637_display(0, '-');
+//		delay_ms(120);
+//		TM1637_display(1, '-');
+//		delay_ms(140);
+//		TM1637_display(2, '-');
+//		delay_ms(170);
+//		TM1637_display(3, '-');
+//		delay_ms(200);
+
+//		GPIO_WriteBit(QEI_GPIO, QEI_CH_A, Bit_SET);
+//		GPIO_WriteBit(QEI_GPIO, QEI_CH_B, Bit_SET);
+//		delay_ms(10);
+//		GPIO_WriteBit(QEI_GPIO, QEI_CH_A, Bit_RESET);
+//		GPIO_WriteBit(QEI_GPIO, QEI_CH_B, Bit_RESET);
+		delay_ms(10);
 	}
+}
+
+void on_b1_press()
+{
+	printf("%s Press Detected\r\n\r\n",b1->alias);
+}
+void on_b1_long_press()
+{
+	printf("%s Long Press Detected\r\n\r\n", b1->alias);
+}
+void on_b1_click()
+{
+	printf("%s Click Detected\r\n\r\n", b1->alias);
+	beeper_beep();
+}
+
+void on_b2_press()
+{
+	printf("%s Press Detected\r\n\r\n",b2->alias);
+}
+void on_b2_long_press()
+{
+	printf("%s Long Press Detected\r\n\r\n", b2->alias);
+}
+void on_b2_click()
+{
+	printf("%s Click Detected\r\n\r\n", b2->alias);
 }

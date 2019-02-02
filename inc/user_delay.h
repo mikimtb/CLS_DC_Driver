@@ -5,8 +5,8 @@
  *      Author: Miroslav Bozic
  */
 
-#ifndef CONTROL_LOOP_H_
-#define CONTROL_LOOP_H_
+#ifndef USER_DELAY_H_
+#define USER_DELAY_H_
 
 #include "stm32f10x.h"
 
@@ -30,4 +30,4 @@ void delay_ms(uint16_t delay);
  */
 uint32_t millis(void);
 
-#endif /* CONTROL_LOOP_H_ */
+#endif /* USER_DELAY_H_ */

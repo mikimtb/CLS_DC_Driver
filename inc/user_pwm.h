@@ -13,6 +13,10 @@
 #include <stdbool.h>
 #include "definitions.h"
 
+#define IR2104_DRV_EN_PORT		GPIOA
+#define IR2104_DRV_EN_PORT_CLK 	RCC_APB2Periph_GPIOA
+#define IR2104_DRV_EN_PIN		GPIO_Pin_10
+
 #define FREQ_MAX  	(SystemCoreClock / 2)			/*!< Maximal frequency definition */
 #define FREQ_MIN	(SystemCoreClock / 0xffff)		/*!< Minimal frequency definition */
 
@@ -40,10 +44,10 @@ typedef struct
 bool pwm_init(uint16_t pwm_frequency);
 
 /**
- * The PWM enable/disable peripheral function
- * @param [in] state - ENABLE to enable the output or DISABLE to disable output
+ * The IR2401S driver enable/disable function
+ * @param [in] cmd - true to enable the driver output or false to DISABLE it
  */
-void pwm_enable(FunctionalState state);
+void pwm_driver_enable(bool cmd);
 
 /**
  * The function sets PWM pulse width if it is not greater then PWM period

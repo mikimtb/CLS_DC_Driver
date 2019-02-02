@@ -18,6 +18,7 @@ static pwm_t pwm = {{0}, {0}, {0}, 0, 0, 0, 0 };	/*!< Global PWM port */
 bool pwm_init(uint16_t pwm_frequency)
 {
 	bool function_completed = false;
+	GPIO_InitTypeDef GPIO_InitStruct;
 
 	if((pwm_frequency < FREQ_MAX) && (pwm_frequency > FREQ_MIN))
 	{
@@ -26,6 +27,15 @@ bool pwm_init(uint16_t pwm_frequency)
 		_pwm_rcc_config();
 		_pwm_gpio_config();
 		_pwm_config();
+
+		RCC_APB2PeriphClockCmd(IR2104_DRV_EN_PORT_CLK, ENABLE);
+
+	    GPIO_InitStruct.GPIO_Pin = IR2104_DRV_EN_PIN;
+	    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
+	    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+	    GPIO_Init(IR2104_DRV_EN_PORT, &GPIO_InitStruct);
+
+	    GPIO_WriteBit(IR2104_DRV_EN_PORT, IR2104_DRV_EN_PIN, Bit_RESET);
 
 		function_completed = true;
 
@@ -42,10 +52,9 @@ bool pwm_init(uint16_t pwm_frequency)
 	return function_completed;
 }
 
-void pwm_enable(FunctionalState state)
+void pwm_driver_enable(bool cmd)
 {
-	/* TIM1 Main Output Enable */
-	TIM_CtrlPWMOutputs(TIM1, state);
+	GPIO_WriteBit(IR2104_DRV_EN_PORT, IR2104_DRV_EN_PIN, cmd);
 }
 
 bool pwm_set_pulse_width(uint32_t ch1_pulse, uint32_t ch2_pulse)
@@ -130,4 +139,5 @@ static void _pwm_config()
 
 	/* TIM1 counter enable */
 	TIM_Cmd(TIM1, ENABLE);
+	TIM_CtrlPWMOutputs(TIM1, ENABLE);
 }

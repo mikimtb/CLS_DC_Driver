@@ -78,7 +78,7 @@ static void _spi_config()
 {
 	SPI_InitTypeDef SPI_InitStruct;
 
-	SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_256;		/*!< The SPI CLK is set to the 281.25KHz, Max for AS5040 is 1MHz */
+	SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_256;		/*!< _256 The SPI CLK is set to the 281.25KHz, Max for AS5040 is 1MHz */
 	SPI_InitStruct.SPI_CPHA = SPI_CPHA_2Edge;
 	SPI_InitStruct.SPI_CPOL = SPI_CPOL_High;
 	SPI_InitStruct.SPI_DataSize = SPI_DataSize_16b;
@@ -96,10 +96,8 @@ static void _spi_config()
 	SPI_Cmd(SPI_PORT, ENABLE);
 }
 
-void _spi_nss(BitAction nss_state)
+static void _spi_nss(BitAction nss_state)
 {
 	GPIO_WriteBit(SPI_GPIO, SPI_NSS_PIN, nss_state);
 }
-
-
 
