@@ -17,8 +17,9 @@
 #define IR2104_DRV_EN_PORT_CLK 	RCC_APB2Periph_GPIOA
 #define IR2104_DRV_EN_PIN		GPIO_Pin_10
 
-#define FREQ_MAX  	(SystemCoreClock / 2)			/*!< Maximal frequency definition */
-#define FREQ_MIN	(SystemCoreClock / 0xffff)		/*!< Minimal frequency definition */
+#define FREQ_MAX  				(SystemCoreClock / 2)			/*!< Maximal frequency definition */
+#define FREQ_MIN				(SystemCoreClock / 0xffff)		/*!< Minimal frequency definition */
+#define POS_CNT_RST_VALUE		0x00							/*!< Position counter reset value */
 
 typedef struct
 {

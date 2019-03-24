@@ -10,13 +10,37 @@
 static void _encoder_rcc_config(void);
 static void _encoder_gpio_config(void);
 static void _encoder_tim_config(uint16_t period);
+static void _encoder_nvic_config(void);
+
+// Private variables definition
+static qei_event_handler_t _qei_index_event_hdlr;
+
+// Interrupt handlers
+void QEI_IRQHandler()
+{
+	if (TIM_GetITStatus(QEI_TIM, TIM_IT_Update))
+	{
+		TIM_ClearITPendingBit(QEI_TIM, TIM_IT_Update);
+
+		// Check if the handler is set and call if not NULL
+		if(_qei_index_event_hdlr != NULL)
+		{
+			_qei_index_event_hdlr();
+		}
+	}
+}
 
 // Public functions implementation
-void qei_init(uint16_t enc_pulses_per_revolution)
+void qei_init(uint16_t enc_pulses_per_revolution, qei_event_handler_t qei_index_hdlr)
 {
+	// Copy index event handler so proper function is
+	// called each time the underflow or overflow is detected
+	_qei_index_event_hdlr = qei_index_hdlr;
+
 	_encoder_rcc_config();
 	_encoder_gpio_config();
 	_encoder_tim_config(enc_pulses_per_revolution);
+	_encoder_nvic_config();
 }
 
 uint16_t qei_get_current_count(void)
@@ -24,9 +48,19 @@ uint16_t qei_get_current_count(void)
 	return TIM_GetCounter(QEI_TIM);
 }
 
+uint16_t qei_get_QEI_CR1()
+{
+	return QEI_TIM->CR1;
+}
+
 void qei_reset_count(void)
 {
+	NVIC_DisableIRQ(QEI_IRQn);
+
 	TIM_SetCounter(QEI_TIM, QEI_RESET_VALUE);
+	TIM_ClearITPendingBit(QEI_TIM, TIM_IT_Update);
+
+	NVIC_EnableIRQ(QEI_IRQn);
 }
 
 //Private functions implementation
@@ -69,5 +103,12 @@ static void _encoder_tim_config(uint16_t period)
 	TIM_EncoderInterfaceConfig(QEI_TIM, TIM_EncoderMode_TI12, TIM_ICPolarity_Rising, TIM_ICPolarity_Rising);
 
 	TIM_Cmd(QEI_TIM, ENABLE);
+}
+
+static void _encoder_nvic_config()
+{
+	TIM_ITConfig(QEI_TIM, TIM_IT_Update, ENABLE );
+	TIM_ClearITPendingBit(QEI_TIM, TIM_IT_Update);
+	NVIC_EnableIRQ(QEI_IRQn);
 }
 

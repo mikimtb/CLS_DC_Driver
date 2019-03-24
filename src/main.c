@@ -14,12 +14,13 @@
 #include <string.h>
 //#include "stm32f10x_gpio.h"
 #include "console_uart.h"
-#include "user_pwm.h"
+//#include "user_pwm.h"
 #include "user_button.h"
 #include "user_beeper.h"
-#include "user_brake.h"
+//#include "user_brake.h"
 #include "tm1637.h"
-#include "as5040.h"
+//#include "as5040.h"
+#include "motion_controller.h"
 
 void on_b1_press(void);
 void on_b1_long_press(void);
@@ -28,6 +29,8 @@ void on_b1_click(void);
 void on_b2_press(void);
 void on_b2_long_press(void);
 void on_b2_click(void);
+
+void on_index(void);
 
 button_t *b1;
 button_t *b2;
@@ -54,17 +57,17 @@ int main(void)
 	//gpio_led_init();
 	console_init();
 
-	brake_init();
+	//brake_init();
 	//GPIO_ResetBits(GPIOC, GPIO_Pin_13);
 	//spi_init();
 //
-	pwm_init(15000);
-	pwm_set_pulse_width(1200, 1200);
-	delay_ms(10);
+//	pwm_init(15000);
+//	pwm_set_pulse_width(1200, 1200);
+//	delay_ms(10);
 
-	pwm_set_pulse_width(1200-500, 1200+500);
+	//pwm_set_pulse_width(1200-500, 1200+500);
 
-	pwm_driver_enable(true);
+	//pwm_driver_enable(true);
 
 	beeper_init();
 
@@ -94,18 +97,22 @@ int main(void)
 //	TM1637_display(2, '-');
 //	TM1637_display(3, '-');
 //	TM1637_display_time(12, 54);
-
+	motion_controller_init(12, 128, GEARBOX, 26);
 	//brake_control(DEACTIVATE);
-	as5040_init(READ_INCREMENTAL, 1023);
-	delay_ms(500);
+	//as5040_init(127, on_index);
+	delay_ms(10);
 	//TM1637_clearDisplay();
+
+
 
 	while (1)
 	{
+		button_check(b1);
+		button_check(b2);
 //		spi_data = as5040_get_angular_position();
 //		printf("%u\r\n", spi_data);
-		spi_data = as5040_get_angular_position();
-		printf("%u\r\n", spi_data);
+//		spi_data = as5040_get_angular_position();
+//		printf("%u\r\n", spi_data);
 
 //		TM1637_clear_display();
 //		delay_ms(250);
@@ -123,7 +130,9 @@ int main(void)
 //		delay_ms(10);
 //		GPIO_WriteBit(QEI_GPIO, QEI_CH_A, Bit_RESET);
 //		GPIO_WriteBit(QEI_GPIO, QEI_CH_B, Bit_RESET);
-		delay_ms(10);
+
+		printf("[ %lu ] : %lld : %d \r\n\r\n", millis(), motion_controller_get_current_angular_position(), motion_controller_get_current_angular_velocity());
+		delay_ms(300);
 	}
 }
 
@@ -139,6 +148,8 @@ void on_b1_click()
 {
 	printf("%s Click Detected\r\n\r\n", b1->alias);
 	beeper_beep();
+	motion_controller_start();
+	pwm_set_pulse_width(1200+500, 1200-500);
 }
 
 void on_b2_press()
@@ -152,4 +163,13 @@ void on_b2_long_press()
 void on_b2_click()
 {
 	printf("%s Click Detected\r\n\r\n", b2->alias);
+	beeper_beep();
+	//motion_controller_stop();
+	pwm_set_pulse_width(1200, 1200);
+}
+
+void on_index()
+{
+	printf("Index_Detected\r\n\r\n");
+	pwm_set_pulse_width(1200, 1200);
 }

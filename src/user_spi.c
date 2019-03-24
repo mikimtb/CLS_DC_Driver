@@ -34,7 +34,7 @@ void spi_init(void)
 
 uint16_t spi_transfer(uint16_t data)
 {
-	_spi_nss(Bit_RESET);
+	//_spi_nss(Bit_RESET);
 
     // Write data to be transmitted to the SPI data register
 	SPI_I2S_SendData(SPI_PORT, data);
@@ -45,7 +45,7 @@ uint16_t spi_transfer(uint16_t data)
     // Wait until SPI is not busy anymore
     while (SPI_PORT->SR & (SPI_I2S_FLAG_BSY));
 
-    _spi_nss(Bit_SET);
+    //_spi_nss(Bit_SET);
 
     return SPI_I2S_ReceiveData(SPI_PORT);
 }

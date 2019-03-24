@@ -157,7 +157,7 @@ static void _console_nvic_config()
 
 	/* Enable the USART1 Interrupt */
 	NVIC_InitStruct.NVIC_IRQChannel = CONSOLE_IRQn;
-	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 1;
+	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 2;
 	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStruct);
 }

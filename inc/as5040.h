@@ -18,49 +18,33 @@
 #define AS5040_CS_GPIO_CLK		RCC_APB2Periph_GPIOA		/*!< The GPIO peripheral clock definition */
 #define AS5040_CS_GPIO_PIN		GPIO_Pin_4					/*!< The SPI CS pin definition */
 
-#define READ_DATA	0x0000
-
-typedef enum _as5040_read_mode_e
-{
-	READ_INCREMENTAL = 1,
-	READ_SPI
-} as5040_read_mode_e;
-
-
-typedef union
-{
-	uint16_t data;
-	struct __attribute__((packed))
-	{
-		unsigned ANGULAR_POSITION 	:10;
-		unsigned OCF				:1;
-		unsigned COF				:1;
-		unsigned LIN				:1;
-		unsigned MAG_INC			:1;
-		unsigned MAG_DEC			:1;
-		unsigned EVEN_PAR			:1;
-	};
-} as5040_register_t;
+#define DIR_FLAG				0x04						/*!< The position of a DIR flag in the QEI_CR1 register */
+#define BIT_MASK				0x01						/*!< The mask that is used to take LSB bit */
 
 typedef struct _as5040_t
 {
-	as5040_read_mode_e read_mode;					/*!< Defined by qei_read_mode_e, A/B quadrature input or SPI read */
 	uint16_t max_counts;							/*!< The number of encoder counts for one full revolution */
-	as5040_register_t reg_word;						/*!< The as5040 read register */
+	qei_event_handler_t on_index_riched_hdlr;		/*!< The callback that will be called once encoder index is detected */
 } as5040_t;
 
 // Private functions declaration
 /**
  * The function initialize peripheral that is connected to the AS5040 encoder IC
- * @param [in] r_mode - as5040_read_mode_e, incremental or serial read
  * @param [in] enc_max_count - the number of counts per full revolution of the encoder
+ * @param [in] e - the pointer to the function that should be called once index signal is detected
  */
-void as5040_init(as5040_read_mode_e r_mode, uint16_t enc_max_count);
+void as5040_init(uint16_t enc_max_count, qei_event_handler_t e);
 
 /**
  * The function read and return angular position using SSI interface
  * @return - Angular position in a range of 0 - 1024
  */
 uint16_t as5040_get_angular_position(void);
+
+/**
+ * The function return direction of rotation
+ * @return 0 if counter counts up (CW) or 1 if counter counts up (CCW)
+ */
+bool as5040_get_direction(void);
 
 #endif /* AS5040_H_ */

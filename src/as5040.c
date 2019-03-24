@@ -8,18 +8,6 @@
 
 // Private functions declaration
 /**
- * The function initialize the SPI peripheral that is used to establish
- * communication with the AS5040 sensor. After initialization the function
- * read angular position and check all flags. If everything goes fine the
- * function return true and the sensor can be used.
- * @return true if the peripheral and the sensor are initialized successfully, otherwise false
- */
-static bool _as5040_serial_init(void);
-/**
- * The function make low pulse on the AS5040 CSn pin to initiate incremental output controller
- */
-static void _as5040_incremental_init(void);
-/**
  * The function initialize gpio pin that is connected to the AS5040 CS pin
  */
 static void _cs_init(void);
@@ -28,87 +16,38 @@ static void _cs_init(void);
 static as5040_t _as5040;
 
 // Public functions implementation
-void as5040_init(as5040_read_mode_e r_mode, uint16_t enc_max_count)
+void as5040_init(uint16_t enc_max_count, qei_event_handler_t e)
 {
-	_as5040.read_mode = r_mode;
 	_as5040.max_counts = enc_max_count;
-	_as5040.reg_word.data = 0;
 
-	switch (_as5040.read_mode)
-	{
-	case READ_INCREMENTAL:
-		_as5040_incremental_init();
+	qei_init(_as5040.max_counts, e);
+	qei_reset_count();
+	_cs_init();
 
-		#ifdef USE_UART_CONSOLE
-		printf("AS5040 is initialized...\r\n"
-				"Mode: INCREMENTAL\r\n"
-				"MAX_CNT: %u\r\n\r\n", _as5040.max_counts);
-		#endif
-
-		break;
-	case READ_SPI:
-		if(_as5040_serial_init())
-		{
-			#ifdef USE_UART_CONSOLE
-			printf("AS5040 is initialized...\r\n"
-					"Mode: SERIAL\r\n"
-					"MAX_CNT: %u\r\n\r\n", _as5040.max_counts);
-			#endif
-		}
-		else
-		{
-			#ifdef USE_UART_CONSOLE
-			printf("AS5040 initialization failed...\r\n\r\n");
-			#endif
-		}
-		break;
-	}
+	#ifdef USE_UART_CONSOLE
+	printf("AS5040 is initialized...\r\n"
+			"Mode: INCREMENTAL\r\n"
+			"MAX_CNT: %u\r\n\r\n", _as5040.max_counts);
+	#endif
 }
 
+// Private functions implementation
 uint16_t as5040_get_angular_position()
 {
 	uint16_t result = 0;
 
-	switch (_as5040.read_mode)
-	{
-	case READ_INCREMENTAL:
-		result = qei_get_current_count();
-		break;
-	case READ_SPI:
-		_as5040.reg_word.data = spi_transfer(READ_DATA);
-		result = _as5040.reg_word.ANGULAR_POSITION;
-		break;
-	}
+	result = qei_get_current_count();
 
 	return result;
 }
 
-static bool _as5040_serial_init()
+bool as5040_get_direction()
 {
-	bool result = false;
-	uint8_t retrie_counter = 100;
-	spi_init();
+	uint16_t qei_cr1_value;
 
-	while((_as5040.reg_word.OCF != true) && (retrie_counter != 0))
-	{
-		_as5040.reg_word.data = spi_transfer(READ_DATA);
-		retrie_counter--;
-	}
+	qei_cr1_value = qei_get_QEI_CR1();
 
-	if (retrie_counter != 0)
-	{
-		result = true;
-	}
-
-	return result;
-}
-
-static void _as5040_incremental_init()
-{
-
-	qei_init(_as5040.max_counts);
-	qei_reset_count();
-	_cs_init();
+	return (qei_cr1_value >> DIR_FLAG) & BIT_MASK;
 }
 
 static void _cs_init()
@@ -126,6 +65,6 @@ static void _cs_init()
     GPIO_WriteBit(AS5040_CS_GPIO, AS5040_CS_GPIO_PIN, Bit_SET);
     delay_ms(1);
     GPIO_WriteBit(AS5040_CS_GPIO, AS5040_CS_GPIO_PIN, Bit_RESET);
-    delay_ms(5);
-    GPIO_WriteBit(AS5040_CS_GPIO, AS5040_CS_GPIO_PIN, Bit_SET);
+//    delay_ms(5);
+//    GPIO_WriteBit(AS5040_CS_GPIO, AS5040_CS_GPIO_PIN, Bit_SET);
 }
