@@ -58,4 +58,10 @@ void pwm_driver_enable(bool cmd);
  */
 bool pwm_set_pulse_width(uint32_t ch1_pulse, uint32_t ch2_pulse);
 
+/**
+ * The function returns calculated PWM period
+ * @return calculated PWM period
+ */
+uint16_t pwm_get_period(void);
+
 #endif /* USER_PWM_H_ */

@@ -97,7 +97,7 @@ int main(void)
 //	TM1637_display(2, '-');
 //	TM1637_display(3, '-');
 //	TM1637_display_time(12, 54);
-	motion_controller_init(12, 128, GEARBOX, 26);
+	motion_controller_init(12, 128, GEARBOX, 26, 200);
 	//brake_control(DEACTIVATE);
 	//as5040_init(127, on_index);
 	delay_ms(10);

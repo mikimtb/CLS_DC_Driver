@@ -79,6 +79,11 @@ bool pwm_set_pulse_width(uint32_t ch1_pulse, uint32_t ch2_pulse)
 	return function_completed;
 }
 
+uint16_t pwm_get_period()
+{
+	return pwm.period;
+}
+
 // Private functions implementation
 static void _pwm_rcc_config()
 {

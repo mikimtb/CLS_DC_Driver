@@ -44,7 +44,7 @@ void MC_IRQHandler()
 }
 
 // Public functions definition
-void motion_controller_init(uint8_t motor_voltage, uint16_t enc_max_cnt, gearbox_e gb_status, uint16_t gb_ratio)
+void motion_controller_init(uint8_t motor_voltage, uint16_t enc_max_cnt, gearbox_e gb_status, uint16_t gb_ratio, uint16_t max_velocity)
 {
 	// Initialize regenerative dynamic brake and deactivate it
 	brake_init();
@@ -62,6 +62,7 @@ void motion_controller_init(uint8_t motor_voltage, uint16_t enc_max_cnt, gearbox
 	m_ctrl.motor.gearbox_ratio = gb_ratio;
 	m_ctrl.motor.is_have_gearbox = gb_status;
 	m_ctrl.motor.max_voltage = motor_voltage;
+	m_ctrl.motor.max_velocity = max_velocity;
 
 	// Initialize incremental encoder
 	if(m_ctrl.motor.is_have_gearbox == GEARBOX)

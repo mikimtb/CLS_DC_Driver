@@ -61,6 +61,7 @@ typedef struct _motor_t
 	uint64_t encoder_index_counter;
 	gearbox_e is_have_gearbox;
 	uint16_t gearbox_ratio;
+	uint16_t max_velocity;
 } motor_t;
 
 typedef struct _motion_ctrl_t
@@ -78,7 +79,7 @@ typedef struct _motion_ctrl_t
 } motion_ctrl_t;
 
 // Private functions definition
-void motion_controller_init(uint8_t motor_voltage, uint16_t enc_max_cnt, gearbox_e gb_status, uint16_t gb_ratio);
+void motion_controller_init(uint8_t motor_voltage, uint16_t enc_max_cnt, gearbox_e gb_status, uint16_t gb_ratio, uint16_t max_velocity);
 void motion_controller_start(void);
 void motion_controller_stop(void);
 void motion_controller_reset(void);
