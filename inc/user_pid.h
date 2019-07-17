@@ -21,9 +21,9 @@ typedef struct _pid
 	float i_state;
 	float d_gain;
 	float d_state;
-}pid_t;
+}pid_c_t;
 
-void pid_init(pid_t * plant_pid, int16_t max_out, int16_t min_out);
-float pid_update(pid_t * plant_pid, float plant_error, float plant_current_value);
+void pid_init(pid_c_t * plant_pid, int16_t max_out, int16_t min_out);
+float pid_update(pid_c_t * plant_pid, int16_t plant_error, int16_t plant_current_value);
 
 #endif /* USER_PID_H_ */

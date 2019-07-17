@@ -14,6 +14,7 @@
 #include "user_pwm.h"
 #include "user_brake.h"
 #include "as5040.h"
+#include "user_pid.h"
 
 #define MC_TIM					TIM2					/*!< The Timer that is used for Motion Controller interface */
 #define MC_TIM_CLK          	RCC_APB1Periph_TIM2		/*!< The Timer peripheral clock definition */

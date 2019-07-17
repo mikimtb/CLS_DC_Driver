@@ -19,6 +19,7 @@
 #include "user_beeper.h"
 //#include "user_brake.h"
 #include "tm1637.h"
+#include "eeprom.h"
 //#include "as5040.h"
 #include "motion_controller.h"
 
@@ -47,6 +48,9 @@ button_t *b2;
 //	GPIO_Init(GPIOC, &GPIO_InitStruct);
 //}
 
+/* Virtual address defined by the user: 0xFFFF value is prohibited */
+uint16_t VirtAddVarTab[NumbOfVar] = {0x0001, 0x0002};
+
 int main(void)
 {
 	uint16_t spi_data = 0;
@@ -69,6 +73,17 @@ int main(void)
 
 	//pwm_driver_enable(true);
 
+	FLASH_Unlock();
+	EE_Init();
+
+	EE_WriteVariable(0x0001, 123);
+	EE_WriteVariable(0x0002, 234);
+
+	EE_ReadVariable(0x0001,&spi_data);
+	EE_ReadVariable(0x0002, &pom_counter);
+
+	printf("Var1: %u\r\nVar2: %u\r\n", spi_data, pom_counter);
+
 	beeper_init();
 
 	TM1637_init();
@@ -77,7 +92,7 @@ int main(void)
 	b1 = button_create("START", RCC_APB2Periph_GPIOB, GPIOB, GPIO_Pin_12, ACTIVE_LOW, 50, 2000, on_b1_press, on_b1_click, on_b1_long_press);
 	b2 = button_create("STOP", RCC_APB2Periph_GPIOB, GPIOB, GPIO_Pin_13, ACTIVE_LOW, 50, 1000, on_b2_press, on_b2_click, on_b2_long_press);
 
-//	TM1637_display_number(9999, COLON_OFF);
+//	TM1637_display_number(1234, COLON_OFF);
 //	TM1637_clear_display();
 //	TM1637_display_number(-999, COLON_OFF);
 //	TM1637_on_off(DISP_OFF);
@@ -131,8 +146,8 @@ int main(void)
 //		GPIO_WriteBit(QEI_GPIO, QEI_CH_A, Bit_RESET);
 //		GPIO_WriteBit(QEI_GPIO, QEI_CH_B, Bit_RESET);
 
-		printf("[ %lu ] : %lld : %d \r\n\r\n", millis(), motion_controller_get_current_angular_position(), motion_controller_get_current_angular_velocity());
-		delay_ms(300);
+//		printf("[ %lu ] : %lld : %d \r\n\r\n", millis(), motion_controller_get_current_angular_position(), motion_controller_get_current_angular_velocity());
+//		delay_ms(300);
 	}
 }
 

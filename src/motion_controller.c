@@ -23,6 +23,10 @@ static motion_ctrl_t m_ctrl;
  * Vcoeff = 60 / (deltaT x GEAR_RATIO x ENC_PULSE_PER_REVOLUTION)
  */
 static float angular_velocity_coeff[5] = { 0,00 };
+/*
+ * Velocity control PID controller
+ */
+static pid_c_t * v_pid;
 
 // IT handlers routine
 void MC_IRQHandler()

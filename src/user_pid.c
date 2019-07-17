@@ -6,14 +6,14 @@
  */
 #include "user_pid.h"
 
-void pid_init(pid_t * plant_pid, int16_t max_out, int16_t min_out)
+void pid_init(pid_c_t * plant_pid, int16_t max_out, int16_t min_out)
 {
 	// Anti-windup
 	plant_pid->i_max = max_out / plant_pid->i_gain;
 	plant_pid->i_min = min_out / plant_pid->i_gain;
 }
 
-float pid_update(pid_t * plant_pid, float plant_error, float plant_current_value)
+float pid_update(pid_c_t * plant_pid, int16_t plant_error, int16_t plant_current_value)
 {
 	float p_term;
 	float i_term;
