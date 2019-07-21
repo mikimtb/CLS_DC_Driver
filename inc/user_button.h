@@ -41,34 +41,18 @@ typedef struct _button_t {
 	uint16_t press_click_debounce;             		/*!< Time in ms for normal press for the button */
 	uint16_t press_long_debounce;                  	/*!< Time in ms for long press for the button */
 	// Button callback functions
-	void (*on_button_pressed_handler)(void);		/*!< Button function handler for button pressed event */
-	void (*on_button_clicked_handler)(void);		/*!< Button function handler for button clicked event */
-	void (*on_button_long_pressed_handler)(void);	/*!< Button function handler for button clicked event */
+	void (*on_button_press_handler)(void);		/*!< Button function handler for button pressed event */
+	void (*on_button_click_handler)(void);		/*!< Button function handler for button clicked event */
+	void (*on_button_long_press_handler)(void);	/*!< Button function handler for button clicked event */
 } button_t;
 
 // Public function declarations
 
 /**
- * The function create button and return pointer to it.
- *
- * The function returns a pointer to the newly created button and it must be assigned
- * to the pointer to the button_t structure in the function caller side to prevent memory leak!!!
- *
- * @param [in] b_alias - String that define button alias, up to ten characters
- * @param [in] b_clk - Peripheral clock of the port where the button is connected to
- * @param [in] b_port - Port where the button is connected to
- * @param [in] b_pin - Pin where the button is connected to
- * @param [in] b_active_state - Defines button active state, ACTIVE_HIGH or ACTIVE_LOW
- * @param [in] b_click_debounce_time - Debounce delay in milliseconds
- * @param [in] b_long_press_debounce_time - Long press delay in milliseconds
- * @param [in] b_press_handler - Button press callback definition
- * @param [in] b_click_handler - Button click callback definition
- * @param [in] b_long_press_handler - Button long press callback definition
- * @return The pointer to the created button
+ * The function initialize gpio where the button b is connected
+ * @param b - pointer to the button variable
  */
-button_t* button_create(char* b_alias, uint32_t b_clk, GPIO_TypeDef* b_port, uint16_t b_pin,
-		gpio_pin_value_e b_active_state, uint16_t b_click_debounce_time, uint16_t b_long_press_debounce_time,
-		void (*b_press_handler)(void), void (*b_click_handler)(void), void (*b_long_press_handler)(void));
+void button_init(button_t * b);
 
 /**
  * The function check the button status and call subscribed

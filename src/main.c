@@ -22,6 +22,7 @@
 #include "eeprom.h"
 //#include "as5040.h"
 #include "motion_controller.h"
+#include "user_timer.h"
 
 void on_b1_press(void);
 void on_b1_long_press(void);
@@ -31,10 +32,31 @@ void on_b2_press(void);
 void on_b2_long_press(void);
 void on_b2_click(void);
 
+void on_timer_tick(void);
+
 void on_index(void);
 
-button_t *b1;
-button_t *b2;
+ctimer_t my_timer = { "FSM TIMER", DISABLED, 0, 1000, on_timer_tick};
+
+//button_t *b1;
+//button_t *b2;
+
+button_t b1 = {"START/STOP", RCC_APB2Periph_GPIOB, GPIOB, GPIO_Pin_12, ACTIVE_LOW, 0, WAIT_FOR_PRESS, WAIT_FOR_PRESS, 50, 2000, on_b1_press, on_b1_click, on_b1_long_press};
+button_t b2 = {"DOWN", RCC_APB2Periph_GPIOB, GPIOB, GPIO_Pin_13, ACTIVE_LOW, 0, WAIT_FOR_PRESS, WAIT_FOR_PRESS, 50, 1000, on_b2_press, on_b2_click, on_b2_long_press};
+
+static tone_t tone1[1] = {{SOUND, T_100_MS}};
+static tone_t tone2[1] = {{SOUND, T_400_MS}};
+static tone_t tone3[12] = {{SOUND, T_100_MS}, {PAUSE, T_100_MS},
+						   {SOUND, T_100_MS}, {PAUSE, T_100_MS},
+						   {SOUND, T_100_MS}, {PAUSE, T_100_MS},
+						   {SOUND, T_100_MS}, {PAUSE, T_300_MS},
+						   {SOUND, T_300_MS}, {PAUSE, T_100_MS},
+						   {SOUND, T_300_MS}, {PAUSE, T_500_MS}};
+
+static beeper_t short_beep = {.m = { .tones = tone1, .tone_max_count = 1}, .beep_type = SINGLE, .tone_count = 0};
+static beeper_t long_beep = {.m = { .tones = tone2, .tone_max_count = 1}, .beep_type = SINGLE, .tone_count = 0};
+static beeper_t alarm = {.m = { .tones = tone3, .tone_max_count = 12}, .beep_type = LOOP, .tone_count = 0};
+
 //void gpio_led_init()
 //{
 //	GPIO_InitTypeDef  GPIO_InitStruct;
@@ -73,7 +95,7 @@ int main(void)
 
 	//pwm_driver_enable(true);
 
-	FLASH_Unlock();
+	/*FLASH_Unlock();
 	EE_Init();
 
 	EE_WriteVariable(0x0001, 123);
@@ -82,16 +104,17 @@ int main(void)
 	EE_ReadVariable(0x0001,&spi_data);
 	EE_ReadVariable(0x0002, &pom_counter);
 
-	printf("Var1: %u\r\nVar2: %u\r\n", spi_data, pom_counter);
+	printf("Var1: %u\r\nVar2: %u\r\n", spi_data, pom_counter);*/
 
 	beeper_init();
 
 	TM1637_init();
 	//TM1637_brightness(0);
 
-	b1 = button_create("START", RCC_APB2Periph_GPIOB, GPIOB, GPIO_Pin_12, ACTIVE_LOW, 50, 2000, on_b1_press, on_b1_click, on_b1_long_press);
-	b2 = button_create("STOP", RCC_APB2Periph_GPIOB, GPIOB, GPIO_Pin_13, ACTIVE_LOW, 50, 1000, on_b2_press, on_b2_click, on_b2_long_press);
-
+//	b1 = button_create("START", RCC_APB2Periph_GPIOB, GPIOB, GPIO_Pin_12, ACTIVE_LOW, 50, 2000, on_b1_press, on_b1_click, on_b1_long_press);
+//	b2 = button_create("STOP", RCC_APB2Periph_GPIOB, GPIOB, GPIO_Pin_13, ACTIVE_LOW, 50, 1000, on_b2_press, on_b2_click, on_b2_long_press);
+	button_init(&b1);
+	button_init(&b2);
 //	TM1637_display_number(1234, COLON_OFF);
 //	TM1637_clear_display();
 //	TM1637_display_number(-999, COLON_OFF);
@@ -115,6 +138,7 @@ int main(void)
 	motion_controller_init(12, 128, GEARBOX, 26, 200);
 	//brake_control(DEACTIVATE);
 	//as5040_init(127, on_index);
+	timer_enable(&my_timer, ENABLE);
 	delay_ms(10);
 	//TM1637_clearDisplay();
 
@@ -122,8 +146,9 @@ int main(void)
 
 	while (1)
 	{
-		button_check(b1);
-		button_check(b2);
+		button_check(&b1);
+		button_check(&b2);
+		timer_check(&my_timer);
 //		spi_data = as5040_get_angular_position();
 //		printf("%u\r\n", spi_data);
 //		spi_data = as5040_get_angular_position();
@@ -153,34 +178,42 @@ int main(void)
 
 void on_b1_press()
 {
-	printf("%s Press Detected\r\n\r\n",b1->alias);
+	printf("%s Press Detected\r\n\r\n",b1.alias);
 }
 void on_b1_long_press()
 {
-	printf("%s Long Press Detected\r\n\r\n", b1->alias);
+	printf("%s Long Press Detected\r\n\r\n", b1.alias);
+	beeper_start(&alarm);
 }
 void on_b1_click()
 {
-	printf("%s Click Detected\r\n\r\n", b1->alias);
-	beeper_beep();
+	printf("%s Click Detected\r\n\r\n", b1.alias);
+	//beeper_beep(1);
+	beeper_start(&short_beep);
 	motion_controller_start();
 	pwm_set_pulse_width(1200+500, 1200-500);
 }
 
 void on_b2_press()
 {
-	printf("%s Press Detected\r\n\r\n",b2->alias);
+	printf("%s Press Detected\r\n\r\n",b2.alias);
 }
 void on_b2_long_press()
 {
-	printf("%s Long Press Detected\r\n\r\n", b2->alias);
+	printf("%s Long Press Detected\r\n\r\n", b2.alias);
+	beeper_stop();
 }
 void on_b2_click()
 {
-	printf("%s Click Detected\r\n\r\n", b2->alias);
-	beeper_beep();
+	printf("%s Click Detected\r\n\r\n", b2.alias);
+	beeper_start(&long_beep);
 	//motion_controller_stop();
 	pwm_set_pulse_width(1200, 1200);
+}
+
+void on_timer_tick()
+{
+	printf("%s Timer tick\r\n", my_timer.name);
 }
 
 void on_index()
