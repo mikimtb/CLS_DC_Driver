@@ -37,9 +37,10 @@ static void _codding_all(uint8_t * src, uint8_t * dst, uint8_t colon);
  * The function separate number num to the digits and add it to the array with address dst
  * @param [in] num - The number that should be separated to digits
  * @param [out] dst - The pointer to the destination array with separated digits
+ * @param [in] find_zeros - The flag that define whether zeros will be shown or not, TRUE - zeros are not shown, FALSE - zeros are shown
  * @return true if result is successful, otherwise false
  */
-static bool _separate_number_to_digits(int16_t num, uint8_t * dst);
+static bool _separate_number_to_digits(int16_t num, uint8_t * dst, bool find_zeros);
 /**
  * The function convert character to digit that can be shown on a display
  * @param [in] c - the character that should be converted
@@ -97,6 +98,10 @@ void TM1637_init()
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(TM1637_PORT, &GPIO_InitStructure);
+
+#ifdef USE_UART_CONSOLE
+	printf("Display Initialized...\r\n");
+#endif
 }
 
 void TM1637_display(uint8_t seg_n, uint8_t character)
@@ -127,7 +132,15 @@ void TM1637_display_number(int16_t number, uint8_t colon_flag)
 
 	_disp.on_off_status = DISP_ON;
 
-	_separate_number_to_digits(number, seg_data);
+	if(colon_flag == COLON_ON)
+	{
+		_separate_number_to_digits(number, seg_data, ZEROS_ON);
+	}
+	else
+	{
+		_separate_number_to_digits(number, seg_data, ZEROS_OFF);
+	}
+
 	_codding_all(seg_data, seg_data, colon_flag);
 	_generate_start();
 	_write_data(DATA_CMD | ADDR_AUTO | NORMAL_MODE);
@@ -190,7 +203,7 @@ bool TM1637_set_brightness(uint8_t brightness)
 	return result;
 }
 
-bool TM1637_display_time(uint8_t hours,uint8_t minutes)
+bool TM1637_display_time(uint8_t hours, uint8_t minutes)
 {
 	int16_t time;
 	bool result = false;
@@ -308,10 +321,10 @@ static void _codding_all(uint8_t * src, uint8_t * dst, uint8_t colon)
 	}
 }
 
-static bool _separate_number_to_digits(int16_t num, uint8_t * dst)
+static bool _separate_number_to_digits(int16_t num, uint8_t * dst, bool find_zeros)
 {
 	bool result = true;
-	bool find_zeros = true;
+	bool find_zeros_flag = find_zeros;
 	uint8_t i;
 
 
@@ -323,11 +336,11 @@ static bool _separate_number_to_digits(int16_t num, uint8_t * dst)
 		{
 			if(num < 0)
 			{
-				if((dst[i] == '-') && find_zeros)
+				if((dst[i] == '-') && find_zeros_flag)
 				{
 					dst[i] = INDEX_NEGATIVE_SIGN;
 				}
-				else if ((dst[i] == '0') && find_zeros)
+				else if ((dst[i] == '0') && find_zeros_flag)
 				{
 					dst[i-1] = INDEX_BLANK;
 					dst[i] = INDEX_NEGATIVE_SIGN;
@@ -335,19 +348,19 @@ static bool _separate_number_to_digits(int16_t num, uint8_t * dst)
 				else
 				{
 					dst[i] -= ASCII_OFFSET_NUMBER;
-					find_zeros = false;
+					find_zeros_flag = false;
 				}
 			}
 			else
 			{
-				if((dst[i] == '0') && find_zeros)
+				if((dst[i] == '0') && find_zeros_flag)
 				{
 					dst[i] = INDEX_BLANK;
 				}
 				else
 				{
 					dst[i] -= ASCII_OFFSET_NUMBER;
-					find_zeros = false;
+					find_zeros_flag = false;
 				}
 			}
 		}

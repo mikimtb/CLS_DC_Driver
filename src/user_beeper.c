@@ -78,6 +78,10 @@ void beeper_init()
     _beeper_rcc_config();
     _beeper_tim_config();
     _beeper_nvic_config();
+
+#ifdef USE_UART_CONSOLE
+	printf("Beeper Initialized...\r\n");
+#endif
 }
 
 void beeper_start(beeper_t * b)

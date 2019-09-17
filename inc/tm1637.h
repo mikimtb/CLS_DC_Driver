@@ -51,6 +51,8 @@
 #define DIGIT_ERROR					0x00						/*!< Define for error character */
 #define ASCII_OFFSET_NUMBER			0x30						/*!< Offset to the ASCII table for numbers */
 #define ASCII_OFFSET_STRING			0x37						/*!< Offset to the ASCII table for letters */
+#define ZEROS_ON					false
+#define ZEROS_OFF					true
 
 //Type definitions
 typedef struct _tm1637_t {

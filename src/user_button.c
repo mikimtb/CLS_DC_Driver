@@ -5,6 +5,7 @@
  *      Author: Miroslav
  */
 #include "user_button.h"
+#include "console_uart.h"
 
 // Public function definitions
 
@@ -18,6 +19,10 @@ void button_init(button_t * b)
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN_FLOATING;
 	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(b->GPIOx, &GPIO_InitStruct);
+
+#ifdef USE_UART_CONSOLE
+	printf("%s Initialized...\r\n", b->alias);
+#endif
 }
 
 void button_check(button_t* b)
