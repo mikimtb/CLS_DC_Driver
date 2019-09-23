@@ -38,16 +38,32 @@ void button_check(button_t* b)
 		//Button press is detected
 		{
 			b->press_time = millis();
-			if (b->on_button_press_handler != NULL)
-			{
-				b->on_button_press_handler();
-			}
 			b->prev_state = b->current_state;
-			b->current_state = BUTTON_PRESSED;
+			b->current_state = PRESS_DEBOUNCE;
+		}
+		break;
+	case PRESS_DEBOUNCE:
+		elapsed_time = millis() - b->press_time;
+		if (current_button_value == b->button_active_value)
+		{
+			if(elapsed_time > PRESS_DEBOUNCE_DELAY)
+			{
+				if (b->on_button_press_handler != NULL)
+				{
+					b->on_button_press_handler();
+				}
+				b->prev_state = b->current_state;
+				b->current_state = BUTTON_PRESSED;
+			}
+		}
+		else
+		{
+			b->prev_state = b->current_state;
+			b->current_state = BUTTON_RELEASED;
 		}
 		break;
 	case BUTTON_PRESSED:
-		elapsed_time = millis() - b->press_time;
+		elapsed_time = millis() - b->press_time + PRESS_DEBOUNCE_DELAY;
 		if (current_button_value == b->button_active_value)
 		{
 			if(elapsed_time > b->press_long_debounce)
@@ -75,7 +91,7 @@ void button_check(button_t* b)
 		}
 		break;
 	case BUTTON_RELEASED:
-		elapsed_time = millis() - b->press_time;
+		elapsed_time = millis() - b->press_time + PRESS_DEBOUNCE_DELAY;
 		if (b->prev_state == BUTTON_PRESSED)
 		{
 			if(elapsed_time > b->press_click_debounce)

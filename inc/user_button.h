@@ -13,6 +13,7 @@
 #include "definitions.h"
 #include "user_delay.h"
 
+#define PRESS_DEBOUNCE_DELAY 50
 
 typedef enum _gpio_pin_value_e
 {
@@ -23,9 +24,10 @@ typedef enum _gpio_pin_value_e
 typedef enum _button_states_e
 {
 	WAIT_FOR_PRESS = 1,
-	BUTTON_PRESSED = 2,
-	WAIT_FOR_BUTTON_RELEASE = 3,
-	BUTTON_RELEASED = 4
+	PRESS_DEBOUNCE,
+	BUTTON_PRESSED,
+	WAIT_FOR_BUTTON_RELEASE,
+	BUTTON_RELEASED
 } button_states_e;
 
 // The button descriptor
@@ -38,7 +40,7 @@ typedef struct _button_t {
 	uint32_t press_time;                         	/*!< Time when button was pressed */
 	button_states_e current_state;                 	/*!< Current button state */
 	button_states_e prev_state;						/*!< Previous button state */
-	uint16_t press_click_debounce;             		/*!< Time in ms for normal press for the button */
+	uint16_t press_click_debounce;             		/*!< Time in ms for click for the button */
 	uint16_t press_long_debounce;                  	/*!< Time in ms for long press for the button */
 	// Button callback functions
 	void (*on_button_press_handler)(void);		/*!< Button function handler for button pressed event */

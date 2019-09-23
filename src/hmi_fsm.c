@@ -58,22 +58,17 @@ uint8_t sec = 0;
 // Public functions
 void hmi_fsm_init()
 {
-	//bool result = false;
 	uint8_t i = 0;
 
-	// Buttons bsp initialization
+	// Buttons BSP initialization
 	for (i=0; i<BTN_NUM; i++)
 	{
 		button_init(&buttons[i]);
 	}
-//	button_init(&b1);
-//	button_init(&b2);
-//	button_init(&b3);
-//	button_init(&b4);
-	// Display bsp initialization
+	//Display initialization
 	TM1637_init();
 	TM1637_display_time(0,0);
-	// Beeper bsp initialization
+	// Beeper BSP initialization
 	beeper_init();
 	beeper_start(&long_beep);
 
