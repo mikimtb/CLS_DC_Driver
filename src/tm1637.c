@@ -402,7 +402,16 @@ static bool _separate_number_to_digits(int16_t num, uint8_t * dst, bool find_zer
 			{
 				if((dst[i] == '0') && find_zeros_flag)
 				{
-					dst[i] = INDEX_BLANK;
+					if(i < DISP_LENGTH - 1)
+					{
+						// If the i doesn't point on the last display character remove zeros
+						dst[i] = INDEX_BLANK;
+					}
+					else
+					{
+						// i points on the latest character, so zero should be shown so display is not blank
+						dst[i] -= ASCII_OFFSET_NUMBER;
+					}
 				}
 				else
 				{
