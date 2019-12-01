@@ -90,6 +90,7 @@ int16_t motion_controller_get_current_pwm_duty(void);
 ctrl_status_e motion_controller_get_status(void);
 void motion_controller_set_angular_postion_setpoint(int16_t ap_setpoint);
 void motion_controller_set_angular_velocity_setpoint(int16_t av_setpoint);
+int16_t motion_controller_get_angular_velocity_setpoint(void);
 void motion_controller_set_pwm_duty(int16_t pwm_duty);
 
 

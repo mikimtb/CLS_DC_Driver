@@ -151,6 +151,10 @@ void motion_controller_set_angular_velocity_setpoint(int16_t av_setpoint)
 {
 	m_ctrl.velocity_setpoint = av_setpoint;
 }
+int16_t motion_controller_get_angular_velocity_setpoint()
+{
+	return m_ctrl.velocity_setpoint;
+}
 void motion_controller_set_pwm_duty(int16_t pwm_duty)
 {
 	m_ctrl.pwm_duty_setpoint = pwm_duty;

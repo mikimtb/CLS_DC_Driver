@@ -71,8 +71,8 @@ static state_function_t state_matrix[n_states][n_events] =
 {						/* pwr_up_e		/ 	btn_ss_click_e   /	btn_up_click_e 	  	/	btn_down_click_e  /		btn_set_click_e  /			btn_set_long_press_e / 	fsm_timeout_e /	fsm_alarm_e
 /* init */				{fsm_run_state, 	NULL, 				NULL, 					NULL, 					NULL, 						NULL, 					NULL, 			NULL			},
 /* run */				{NULL, 				fsm_run_state,		fsm_change_vel_state, 	fsm_change_vel_state, 	fsm_show_velocity_state,	fsm_menu_state, 		NULL, 			fsm_alarm_state },
-/* change_velocity */	{NULL, 				fsm_run_state, 		fsm_change_vel_state, 	fsm_change_vel_state, 	NULL, 						NULL, 					fsm_run_state, 	fsm_alarm_state },
-/* show_velocity */		{NULL, 				NULL, 				NULL, 					NULL,				 	NULL, 						NULL, 					fsm_run_state, 	fsm_alarm_state },
+/* change_velocity */	{NULL, 				fsm_run_state, 		fsm_change_vel_state, 	fsm_change_vel_state, 	fsm_show_velocity_state,	NULL, 					fsm_run_state, 	fsm_alarm_state },
+/* show_velocity */		{NULL, 				fsm_run_state, 		fsm_change_vel_state, 	fsm_change_vel_state, 	NULL, 						NULL, 					fsm_run_state, 	fsm_alarm_state },
 /* alarm */				{NULL, 				fsm_run_state, 		fsm_run_state,		 	fsm_run_state,		 	fsm_run_state,				NULL, 					NULL,		 	NULL,		  	},
 /* menu */				{NULL, 				NULL, 				fsm_menu_state, 		fsm_menu_state, 		fsm_menu_state, 			fsm_run_state, 			fsm_run_state, 	fsm_alarm_state }
 };
@@ -321,7 +321,13 @@ static void fsm_run_state(fsm_events_e e)
 	case show_velocity_state:
 		app_fsm.disp_mode = show_clock;
 		break;
-	case run_state:
+	case change_velocity_state:
+		app_fsm.disp_mode = show_clock;
+		break;
+	}
+
+	if(e == btn_start_stop_click_event)
+	{
 		if (motion_controller_get_status() == STOPPED)
 		{
 			motion_controller_start();
@@ -332,7 +338,6 @@ static void fsm_run_state(fsm_events_e e)
 			motion_controller_stop();
 			pwm_set_pulse_width(1200, 1200);
 		}
-		break;
 	}
 
 #ifdef USE_UART_CONSOLE
@@ -342,8 +347,32 @@ static void fsm_run_state(fsm_events_e e)
 
 static void fsm_change_vel_state(fsm_events_e e)
 {
+	int16_t vel_set_point;
+
 	app_fsm.prevous_state = app_fsm.current_state;
 	app_fsm.current_state = change_velocity_state;
+
+	if(app_fsm.prevous_state == alarm_state)
+	{
+		beeper_stop();
+	}
+	else
+	{
+		app_fsm.disp_mode = ext_control;
+		vel_set_point = motion_controller_get_angular_velocity_setpoint();
+
+		if(e == btn_up_click_event)
+		{
+			vel_set_point++;
+		}
+		else if (e == btn_down_click_event)
+		{
+			vel_set_point--;
+		}
+
+		motion_controller_set_angular_velocity_setpoint(vel_set_point);
+		TM1637_display_number(motion_controller_get_angular_velocity_setpoint(), COLON_OFF);
+	}
 
 	timer_set_tick_interval(&timers[FSM_TMR], CHANGE_VELOCITY_STATE_TIMEOUT_TIME);
 	timer_enable(&timers[FSM_TMR], ENABLE);
