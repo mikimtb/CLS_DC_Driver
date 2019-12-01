@@ -149,7 +149,16 @@ void motion_controller_set_angular_postion_setpoint(int16_t ap_setpoint)
 }
 void motion_controller_set_angular_velocity_setpoint(int16_t av_setpoint)
 {
-	m_ctrl.velocity_setpoint = av_setpoint;
+	int16_t av_setpoint_temp = av_setpoint;
+
+	if (av_setpoint_temp < 0)
+	{
+		av_setpoint_temp *= -1;
+	}
+	if (av_setpoint_temp <= m_ctrl.motor.max_velocity)
+	{
+		m_ctrl.velocity_setpoint = av_setpoint;
+	}
 }
 int16_t motion_controller_get_angular_velocity_setpoint()
 {
