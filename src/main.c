@@ -9,6 +9,7 @@
 */
 
 
+#include <app.h>
 #include <user_delay.h>
 #include "stm32f10x.h"
 #include <string.h>
@@ -22,7 +23,6 @@
 #include "eeprom.h"
 //#include "as5040.h"
 #include "motion_controller.h"
-#include "hmi_fsm.h"
 //#include "user_timer.h"
 
 //void on_b1_press(void);
@@ -133,7 +133,7 @@ int main(void)
 //	TM1637_display(2, '-');
 //	TM1637_display(3, '-');
 //	TM1637_display_time(12, 54);
-	hmi_fsm_init();
+	app_init();
 	motion_controller_init(12, 128, GEARBOX, 26, 200);
 	//brake_control(DEACTIVATE);
 	//as5040_init(127, on_index);
@@ -145,7 +145,8 @@ int main(void)
 
 	while (1)
 	{
-		hmi_fsm_check_for_events();
+		app_check_for_events();
+		app_resolve_events();
 //		button_check(&b1);
 //		button_check(&b2);
 //		timer_check(&my_timer);

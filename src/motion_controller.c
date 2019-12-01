@@ -97,6 +97,8 @@ void motion_controller_init(uint8_t motor_voltage, uint16_t enc_max_cnt, gearbox
 	_mc_tim_config();
 	_mc_nvic_config();
 
+	TIM_Cmd(MC_TIM, ENABLE);
+
 	#ifdef USE_UART_CONSOLE
 	printf("Motion Controller is initialized...\r\n");
 	#endif
@@ -106,13 +108,13 @@ void motion_controller_start(void)
 {
 	m_ctrl.status = STARTED;
 	// Enable MC control loop
-	TIM_Cmd(MC_TIM, ENABLE);
+	//TIM_Cmd(MC_TIM, ENABLE);
 }
 void motion_controller_stop(void)
 {
 	m_ctrl.status = STOPPED;
 	// Disable MC control loop
-	TIM_Cmd(MC_TIM, DISABLE);
+	//TIM_Cmd(MC_TIM, DISABLE);
 }
 void motion_controller_reset(void)
 {
@@ -136,6 +138,10 @@ int16_t motion_controller_get_current_angular_velocity(void)
 int16_t motion_controller_get_current_pwm_duty(void)
 {
 	return m_ctrl.pwm_duty_setpoint;
+}
+ctrl_status_e motion_controller_get_status()
+{
+	return m_ctrl.status;
 }
 void motion_controller_set_angular_postion_setpoint(int16_t ap_setpoint)
 {

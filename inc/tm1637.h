@@ -2,7 +2,10 @@
 #define TM1637_H
 #include "stdint.h"
 #include <stdbool.h>
+#include "definitions.h"
+#include "user_timer.h"
 
+// GPIO definition for the display interface
 #define TM1637_PORT_CLK				RCC_APB2Periph_GPIOA		/*!< The GPIO port peripheral clock */
 #define TM1637_PORT 				GPIOA						/*!< The GPIO port where the display is connected to */
 #define TM1637_DATA_PIN 			GPIO_Pin_1					/*!< The GPIO pin that is connected to the display DATA IO signal */
@@ -54,10 +57,18 @@
 #define ZEROS_ON					false
 #define ZEROS_OFF					true
 
+// Enum definitions
+typedef enum _tm1637_mode_e
+{
+	tm1637_mode_blinking = 0,
+	tm1637_mode_constant_on
+} tm1637_mode_e;
+
 //Type definitions
 typedef struct _tm1637_t {
 	uint8_t brightness_level;									/*!< The number from 0 - 7 that represent brightness level */
 	uint8_t on_off_status;										/*!< The display on-off status */
+	tm1637_mode_e mode;
 } tm1637_t;
 
 
@@ -105,5 +116,10 @@ void TM1637_clear_display(void);
  * @param [in] status - DISP_OFF to turn the display off, or DISP_ON to turn it on
  */
 void TM1637_on_off(uint8_t status);
+/**
+ * The function toggle display screen status. If
+ * the display is on it will be off and vice versa.
+ */
+void TM1637_toggle(void);
 
 #endif

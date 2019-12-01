@@ -9,6 +9,8 @@
 #define USER_DELAY_H_
 
 #include "stm32f10x.h"
+#include "definitions.h"
+#include "user_timer.h"
 
 #define systick_freq 1000 /*!< The systick timer frequency definition, 1ms */
 

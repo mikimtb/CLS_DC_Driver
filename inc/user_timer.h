@@ -9,18 +9,19 @@
 #define USER_TIMER_H_
 
 #include "stddef.h"
+#include "definitions.h"
 #include "user_delay.h"
 
-typedef enum _timer_states_e
-{
-	DISABLED,								/*!< Virtual timer disabled */
-	ENABLED									/*!< Virtual timer enabled */
-} timer_states_e;
+//typedef enum _timer_states_e
+//{
+//	DISABLED,								/*!< Virtual timer disabled */
+//	ENABLED									/*!< Virtual timer enabled */
+//} timer_states_e;
 
 typedef struct _ctimer_t
 {
 	char name[10];							/*!< Virtual timer alias */
-	timer_states_e current_state;			/*!< Virtual timer current state, ENABLED or DISABLED */
+	functional_states_e current_state;		/*!< Virtual timer current state, ENABLED or DISABLED */
 	uint32_t start_time;					/*!< The time when the timer is enabled */
 	uint32_t tick_interval;					/*!< Virtual timer tick interval */
 	void (*on_timer_tick_handler)(void);	/*!< Timer thick event handler function */

@@ -2,6 +2,7 @@
 #include "stm32f10x_gpio.h"
 
 // Private functions declaration
+static void _on_TM1637_tmr_tick(void);
 /**
  * The clock tik generator
  * @param [i] i - the time in clocks that define the clock period
@@ -54,8 +55,12 @@ static uint8_t _convert_char_to_digit(uint8_t c);
  */
 static void _separate_string_to_digits(uint8_t * str, uint8_t * dst);
 
-static tm1637_t _disp = { .brightness_level = BRIGHTNESS_LEVEL_5, .on_off_status = DISP_OFF };		/*!< The display object */
+// Private members
+static tm1637_t _disp = { .brightness_level = BRIGHTNESS_LEVEL_5,
+						  .on_off_status = DISP_OFF,
+						  .mode = tm1637_mode_constant_on };		/*!< The display object */
 
+ctimer_t blinking_tmr = {"DISP_TMR", DISABLED, 0, 500, _on_TM1637_tmr_tick};
 /**
  * The array with the character masks
  *      A
@@ -108,7 +113,7 @@ void TM1637_display(uint8_t seg_n, uint8_t character)
 {
 	uint8_t seg_data;
 
-	_disp.on_off_status = DISP_ON;
+	//_disp.on_off_status = DISP_ON;
 
 	seg_data = _convert_char_to_digit(character);
 	seg_data = _codding(seg_data);
@@ -130,7 +135,7 @@ void TM1637_display_number(int16_t number, uint8_t colon_flag)
 	uint8_t seg_data[4];
 	uint8_t i;
 
-	_disp.on_off_status = DISP_ON;
+	//_disp.on_off_status = DISP_ON;
 
 	if(colon_flag == COLON_ON)
 	{
@@ -164,7 +169,7 @@ void TM1637_display_string(uint8_t * str)
 	uint8_t seg_data[4];
 	uint8_t i;
 
-	_disp.on_off_status = DISP_ON;
+	//_disp.on_off_status = DISP_ON;
 
 	_separate_string_to_digits(str, seg_data);
 	_codding_all(seg_data, seg_data, COLON_OFF);
@@ -233,7 +238,49 @@ void TM1637_on_off(uint8_t status)
 	_generate_stop();
 }
 
+void TM1637_toggle()
+{
+	if(_disp.on_off_status == DISP_ON)
+	{
+		_disp.on_off_status = DISP_OFF;
+	}
+	else
+	{
+		_disp.on_off_status = DISP_ON;
+	}
+
+	_generate_start();
+	_write_data(DISP_CTRL_CMD | _disp.on_off_status | _disp.brightness_level);
+	_generate_stop();
+}
+
+void TM1637_set_mode(tm1637_mode_e mode)
+{
+	_disp.mode = mode;
+	if(mode == tm1637_mode_blinking)
+	{
+		timer_enable(&blinking_tmr, ENABLE);
+	}
+	else
+	{
+		timer_enable(&blinking_tmr, DISABLE);
+		TM1637_on_off(DISP_ON);
+	}
+}
+
 // Private functions implementation
+static void _on_TM1637_tmr_tick()
+{
+	if(_disp.mode == tm1637_mode_blinking)
+	{
+		TM1637_toggle();
+	}
+
+#ifdef USE_UART_CONSOLE
+	printf("%s Timer Tick Happened \r\n", blinking_tmr.name);
+#endif
+}
+
 static void _tik_delay(uint32_t i)
 {
 	while(i)
