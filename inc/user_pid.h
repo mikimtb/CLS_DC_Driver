@@ -10,9 +10,9 @@
 
 #include "user_pwm.h"
 
-#define PWM_MAX_OUT
+//#define PWM_MAX_OUT
 
-typedef struct _pid
+typedef struct _mpid
 {
 	float p_gain;
 	float i_gain;
@@ -21,9 +21,10 @@ typedef struct _pid
 	float i_state;
 	float d_gain;
 	float d_state;
-}pid_c_t;
+}mpid_c_t;
 
-void pid_init(pid_c_t * plant_pid, int16_t max_out, int16_t min_out);
-float pid_update(pid_c_t * plant_pid, int16_t plant_error, int16_t plant_current_value);
+void mpid_init(mpid_c_t * plant_pid, int16_t max_out, int16_t min_out);
+float mpid_update(mpid_c_t * plant_pid, int16_t plant_error, int16_t plant_current_value);
+void mpid_reset(mpid_c_t * plant_pid);
 
 #endif /* USER_PID_H_ */

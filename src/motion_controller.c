@@ -26,11 +26,14 @@ static float angular_velocity_coeff[5] = { 0,00 };
 /*
  * Velocity control PID controller
  */
-static pid_c_t * v_pid;
+mpid_c_t v_pid;
 
 // IT handlers routine
 void MC_IRQHandler()
 {
+	int16_t calculated_pwm_output;
+	int16_t plant_error;
+
 	if (TIM_GetITStatus(MC_TIM, TIM_IT_Update))
 	{
 		TIM_ClearITPendingBit(MC_TIM, TIM_IT_Update);
@@ -41,6 +44,21 @@ void MC_IRQHandler()
 		m_ctrl.angular_position = m_ctrl.motor.encoder_index_counter + as5040_get_angular_position();
 		// Calculate and update velocity
 		_calculate_angular_velocity(m_ctrl.angular_position);
+		// Calculate and update motion parameters
+		if (m_ctrl.status == STARTED)
+		{
+			plant_error = m_ctrl.velocity_setpoint - m_ctrl.angular_velocity;
+			calculated_pwm_output = (int16_t)(mpid_update(&v_pid, plant_error, m_ctrl.angular_velocity));
+			motion_controller_set_pwm_duty(m_ctrl.current_pwm_duty + calculated_pwm_output);
+			//pwm_set_pulse_width(1200-800, 1200+800);
+		}
+		else if (m_ctrl.status == STOPPED)
+		{
+			motion_controller_set_pwm_duty(0);
+			mpid_reset(&v_pid);
+			//pwm_set_pulse_width(ZERO_DUTY, ZERO_DUTY);
+		}
+		// Update
 
 		//printf("[ %lu ] : %lld : %d \r\n\r\n", millis(), m_ctrl.angular_position, m_ctrl.angular_velocity);
 		/* Motion Controller loop is ending here */
@@ -56,7 +74,7 @@ void motion_controller_init(uint8_t motor_voltage, uint16_t enc_max_cnt, gearbox
 
 	// Initialize PWM generator
 	pwm_init(PWM_15KHZ);
-	m_ctrl.pwm_duty_setpoint = 0;
+	m_ctrl.current_pwm_duty = 0;
 	pwm_set_pulse_width(ZERO_DUTY, ZERO_DUTY);
 	pwm_driver_enable(true);
 
@@ -91,6 +109,13 @@ void motion_controller_init(uint8_t motor_voltage, uint16_t enc_max_cnt, gearbox
 
 	// Initialize coefficients
 	_calculate_velocity_coefficients(MAX_NUMBER_OF_CYCLES);
+
+	// Initialize PID controller
+	v_pid.p_gain = 1.0;
+	v_pid.i_gain = 0.0;
+	v_pid.d_gain = 0.0;
+
+	mpid_init( &v_pid, PWM_MAX_OUT, -PWM_MAX_OUT );
 
 	// Initialize Motion Controller control loop timer
 	_mc_rcc_config();
@@ -137,7 +162,7 @@ int16_t motion_controller_get_current_angular_velocity(void)
 }
 int16_t motion_controller_get_current_pwm_duty(void)
 {
-	return m_ctrl.pwm_duty_setpoint;
+	return m_ctrl.current_pwm_duty;
 }
 ctrl_status_e motion_controller_get_status()
 {
@@ -166,7 +191,8 @@ int16_t motion_controller_get_angular_velocity_setpoint()
 }
 void motion_controller_set_pwm_duty(int16_t pwm_duty)
 {
-	m_ctrl.pwm_duty_setpoint = pwm_duty;
+	m_ctrl.current_pwm_duty = pwm_duty;
+	pwm_set_pulse_width(ZERO_DUTY - pwm_duty, ZERO_DUTY + pwm_duty);
 }
 
 // Private functions definition

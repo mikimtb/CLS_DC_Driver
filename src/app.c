@@ -104,11 +104,13 @@ void app_init()
 	//Display initialization
 	TM1637_init();
 	TM1637_on_off(DISP_ON);
-	//TM1637_display_time(0,0);
+
+	// Motion controller initialization
+	motion_controller_init(12, 128, GEARBOX, 26, 200);
 
 	// Beeper BSP initialization
 	beeper_init();
-	beeper_start(&long_beep);
+	//beeper_start(&long_beep);
 
 	timer_enable(&timers[RTC_TMR], ENABLE);
 }
@@ -131,7 +133,6 @@ void app_check_for_events()
 void app_resolve_events()
 {
 	fsm_events_e event;
-//	while (ring_buffer_deQ(&fsm_events_buff, &event))
 	while (POP_EVENT(fsm_events_buff, event))
 	{
 		/**
@@ -165,7 +166,6 @@ void app_resolve_events()
 static void on_btn_start_stop_click()
 {
 	beeper_start(&short_beep);
-	//ring_buffer_enQ(&fsm_events_buff, (uint8_t)btn_start_stop_click_event);
 	PUSH_EVENT(fsm_events_buff, btn_start_stop_click_event);
 
 #ifdef USE_UART_CONSOLE
@@ -190,7 +190,6 @@ static void on_btn_start_stop_click()
 static void on_btn_up_click()
 {
 	beeper_start(&short_beep);
-	//ring_buffer_enQ(&fsm_events_buff, (uint8_t)btn_up_click_event);
 	PUSH_EVENT(fsm_events_buff, btn_up_click_event);
 
 #ifdef USE_UART_CONSOLE
@@ -215,7 +214,6 @@ static void on_btn_up_click()
 static void on_btn_down_click()
 {
 	beeper_start(&short_beep);
-	//ring_buffer_enQ(&fsm_events_buff, (uint8_t)btn_down_click_event);
 	PUSH_EVENT(fsm_events_buff, btn_down_click_event);
 
 #ifdef USE_UART_CONSOLE
@@ -240,7 +238,6 @@ static void on_btn_down_click()
 static void on_btn_set_click()
 {
 	beeper_start(&short_beep);
-	//ring_buffer_enQ(&fsm_events_buff, (uint8_t)btn_set_click_event);
 	PUSH_EVENT(fsm_events_buff, btn_set_click_event);
 
 #ifdef USE_UART_CONSOLE
@@ -251,7 +248,6 @@ static void on_btn_set_click()
 static void on_btn_set_long_press()
 {
 	beeper_start(&long_beep);
-	//ring_buffer_enQ(&fsm_events_buff, (uint8_t)btn_set_long_press_event);
 	PUSH_EVENT(fsm_events_buff, btn_set_long_press_event);
 
 #ifdef USE_UART_CONSOLE
@@ -261,7 +257,6 @@ static void on_btn_set_long_press()
 
 static void on_fsm_timeout_tmr_tick()
 {
-	//ring_buffer_enQ(&fsm_events_buff, (uint8_t)fsm_timeout_tmr_event);
 	PUSH_EVENT(fsm_events_buff, fsm_timeout_tmr_event);
 
 	timer_enable(&timers[FSM_TMR], DISABLE);
@@ -273,8 +268,6 @@ static void on_fsm_timeout_tmr_tick()
 
 static void on_rtc_generator_tmr_tick()
 {
-	my_clock_t time;
-
 	clock_update();
 
 	if(alarm_update())
@@ -289,6 +282,8 @@ static void on_rtc_generator_tmr_tick()
 		break;
 	case show_velocity:
 		TM1637_display_number(motion_controller_get_current_angular_velocity(), COLON_OFF);
+		break;
+	case ext_control:
 		break;
 	}
 
@@ -315,14 +310,20 @@ static void fsm_run_state(fsm_events_e e)
 
 	switch(app_fsm.prevous_state)
 	{
-	case alarm_state:
-		beeper_stop();
+	case init_state:
+		break;
+	case run_state:
+		break;
+	case change_velocity_state:
+		app_fsm.disp_mode = show_clock;
 		break;
 	case show_velocity_state:
 		app_fsm.disp_mode = show_clock;
 		break;
-	case change_velocity_state:
-		app_fsm.disp_mode = show_clock;
+	case alarm_state:
+		beeper_stop();
+		break;
+	case menu_items_state:
 		break;
 	}
 
@@ -331,12 +332,10 @@ static void fsm_run_state(fsm_events_e e)
 		if (motion_controller_get_status() == STOPPED)
 		{
 			motion_controller_start();
-			pwm_set_pulse_width(1200-800, 1200+800);
 		}
 		else
 		{
 			motion_controller_stop();
-			pwm_set_pulse_width(1200, 1200);
 		}
 	}
 

@@ -21,8 +21,9 @@
 #define MC_IRQn					TIM2_IRQn				/*!< The encoder interface interrupt */
 #define MC_IRQHandler			TIM2_IRQHandler			/*!< The encoder interface interrupt handler */
 
-#define PWM_15KHZ				15000							/*!< Define 15KHz PWM frequency */
-#define ZERO_DUTY				1200							/*!< Define PWM duty cycle at which the voltage in the H bridge is 0V*/
+#define PWM_15KHZ				15000					/*!< Define 15KHz PWM frequency */
+#define ZERO_DUTY				1200					/*!< Define PWM duty cycle at which the voltage in the H bridge is 0V*/
+#define PWM_MAX_OUT				ZERO_DUTY-1
 
 #define MOVEMENT_THRESHOLD		30					/*!< Minimal movement of the motor shaft that initiates new angular velocity calculation */
 #define MAX_NUMBER_OF_CYCLES    4					/*!< Maximal number of cycles before angular velocity calculation is initiated */
@@ -73,7 +74,7 @@ typedef struct _motion_ctrl_t
 	ctrl_status_e status;
 	int64_t position_setpoint;
 	int16_t velocity_setpoint;
-	int16_t pwm_duty_setpoint;
+	int16_t current_pwm_duty;
 	brake_status_e brake_status;
 	uint16_t enc_index;
 	motor_t motor;
