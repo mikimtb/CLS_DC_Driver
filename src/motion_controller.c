@@ -26,7 +26,7 @@ static float angular_velocity_coeff[5] = { 0,00 };
 /*
  * Velocity control PID controller
  */
-mpid_c_t v_pid;
+static mpid_c_t v_pid;
 
 // IT handlers routine
 void MC_IRQHandler()
