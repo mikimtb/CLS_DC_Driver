@@ -39,5 +39,12 @@ typedef enum _functional_states_e
 	ENABLED									/*!< Functional enable enum */
 } functional_states_e;
 
+typedef enum _errors_e
+{
+	NO_ERROR = 0,
+	EEPROM_INIT_FAILED,
+	EEPROM_READ_FAILED,
+	EEPROM_WRITE_FAILED
+} errors_e;
 
 #endif /* DEFINITIONS_H_ */

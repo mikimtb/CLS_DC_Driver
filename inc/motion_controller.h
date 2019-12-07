@@ -81,7 +81,9 @@ typedef struct _motion_ctrl_t
 } motion_ctrl_t;
 
 // Private functions definition
-void motion_controller_init(uint8_t motor_voltage, uint16_t enc_max_cnt, gearbox_e gb_status, uint16_t gb_ratio, uint16_t max_velocity);
+void motion_controller_init_motor_params(uint8_t motor_voltage, uint16_t enc_max_cnt, gearbox_e gb_status, uint16_t gb_ratio, uint16_t max_velocity);
+void motion_controller_init_PID_params(float p, float i, float d);
+void motion_controller_init_default_setpoints(int64_t dps, int16_t dvs);
 void motion_controller_start(void);
 void motion_controller_stop(void);
 void motion_controller_reset(void);

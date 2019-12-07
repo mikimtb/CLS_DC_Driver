@@ -4,7 +4,10 @@
  *  Created on: Jul 17, 2019
  *      Author: Miroslav
  */
-#include <app.h>
+#include "app.h"
+
+// Extern functions
+extern void error_handler(errors_e error_code);
 
 // Callback function prototypes
 //static void on_btn_start_stop_press(void);
@@ -84,12 +87,24 @@ fsm_t app_fsm;
 void app_init()
 {
 	uint8_t i = 0;
+	device_registers_t dp;
+
 	// Buttons BSP initialization
 	for (i=0; i<BTN_NUM; i++)
 	{
 		button_init(&buttons[i]);
 	}
 
+	// Init EEPROM and read all parameters
+	if (app_params_init() != FLASH_COMPLETE)
+	{
+		error_handler(EEPROM_INIT_FAILED);
+	}
+
+	if (app_params_read_all() != VARIABLE_FOUND)
+	{
+		error_handler(EEPROM_READ_FAILED);
+	}
 	// FSM Init
 	fsm_init_state(pwr_up_event);
 	// Push power up event to buffer to initiate state machine running
@@ -103,11 +118,24 @@ void app_init()
 
 	//Display initialization
 	TM1637_init();
-	TM1637_on_off(DISP_ON);
+	TM1637_set_mode(tm1637_mode_constant_on);
+	//TM1637_on_off(DISP_ON);
 
 	// Motion controller initialization
-	motion_controller_init(12, 128, GEARBOX, 26, 200);
-
+	// Copy all parameters to the temp variable
+	for (i=0;i<DEVICE_REG_NUM; i++)
+	{
+		dp.device_registers[i] = app_params_get_device_register(i);
+	}
+	// Check if the device is initialized
+	if (dp.is_initialized != "Y")
+	{
+		// If not, go to wizard to initialize the device
+	}
+	// Init motion controller
+	motion_controller_init_motor_params(dp.motor_operating_voltage, dp.encoder_max_count, dp.motor_status_reg_bits.IS_HAVE_GEARBOX, dp.motor_gearbox_ratio, dp.motor_max_velocity);
+	motion_controller_init_PID_params(dp.p_gain, dp.i_gain, dp.d_gain);
+	motion_controller_init_default_setpoints(dp.default_position_setpoint, dp.default_velocity_setpoint);
 	// Beeper BSP initialization
 	beeper_init();
 	//beeper_start(&long_beep);

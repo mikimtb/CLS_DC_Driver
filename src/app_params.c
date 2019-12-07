@@ -54,6 +54,10 @@ FLASH_Status app_params_write_all(device_registers_t * wparams)
 	return write_status;
 }
 
+uint16_t app_params_get_device_register(uint8_t device_register_index)
+{
+	return params.device_registers[device_register_index];
+}
 uint8_t app_params_get_is_init()
 {
 	return (uint8_t)params.is_initialized;

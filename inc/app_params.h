@@ -67,6 +67,7 @@ typedef union
 FLASH_Status app_params_init(void);
 PARAM_Read_Status_e app_params_read_all(void);
 FLASH_Status app_params_write_all(device_registers_t * wparams);
+uint16_t app_params_get_device_register(uint8_t device_register_index);
 uint8_t app_params_get_is_init(void);
 int64_t app_params_get_deafult_position_setpoint(void);
 int16_t app_params_get_default_velocity_setpoint(void);

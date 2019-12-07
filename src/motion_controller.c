@@ -66,7 +66,7 @@ void MC_IRQHandler()
 }
 
 // Public functions definition
-void motion_controller_init(uint8_t motor_voltage, uint16_t enc_max_cnt, gearbox_e gb_status, uint16_t gb_ratio, uint16_t max_velocity)
+void motion_controller_init_motor_params(uint8_t motor_voltage, uint16_t enc_max_cnt, gearbox_e gb_status, uint16_t gb_ratio, uint16_t max_velocity)
 {
 	// Initialize regenerative dynamic brake and deactivate it
 	brake_init();
@@ -103,19 +103,10 @@ void motion_controller_init(uint8_t motor_voltage, uint16_t enc_max_cnt, gearbox
 	m_ctrl.angular_position = 0;
 	m_ctrl.angular_velocity = 0;
 	m_ctrl.direction = as5040_get_direction();
-	m_ctrl.position_setpoint = 0;
-	m_ctrl.velocity_setpoint = 0;
 	m_ctrl.status = STOPPED;
 
 	// Initialize coefficients
 	_calculate_velocity_coefficients(MAX_NUMBER_OF_CYCLES);
-
-	// Initialize PID controller
-	v_pid.p_gain = 1.0;
-	v_pid.i_gain = 0.0;
-	v_pid.d_gain = 0.0;
-
-	mpid_init( &v_pid, PWM_MAX_OUT, -PWM_MAX_OUT );
 
 	// Initialize Motion Controller control loop timer
 	_mc_rcc_config();
@@ -127,7 +118,30 @@ void motion_controller_init(uint8_t motor_voltage, uint16_t enc_max_cnt, gearbox
 	#ifdef USE_UART_CONSOLE
 	printf("Motion Controller is initialized...\r\n");
 	#endif
+}
 
+void motion_controller_init_PID_params(float p, float i, float d)
+{
+	// Initialize PID controller
+	v_pid.p_gain = p;
+	v_pid.i_gain = i;
+	v_pid.d_gain = d;
+
+	mpid_init( &v_pid, PWM_MAX_OUT, -PWM_MAX_OUT );
+
+	#ifdef USE_UART_CONSOLE
+	printf("PID Controller is initialized...\r\n");
+	#endif
+}
+
+void motion_controller_init_default_setpoints(int64_t dps, int16_t dvs)
+{
+	m_ctrl.position_setpoint = dps;
+	m_ctrl.velocity_setpoint = dvs;
+
+#ifdef USE_UART_CONSOLE
+printf("Default set-points initialized...\r\n");
+#endif
 }
 void motion_controller_start(void)
 {

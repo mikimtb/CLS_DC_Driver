@@ -15,6 +15,7 @@
 #include "user_button.h"
 #include "user_timer.h"
 #include "user_beeper.h"
+#include "app_params.h"
 #include "motion_controller.h"
 
 #define EVENT_BUFFER_SIZE					128
