@@ -14,17 +14,24 @@
 
 #define DEVICE_REG_NUM	((uint8_t)0x11)
 
-#define	IS_INITIALIZED_REG_OFFSET					((uint8_t)0)
-#define DEFAULT_POSITION_SETPOINT_REG_OFFSET		((uint8_t)1)
-#define DEFAULT_VELOCITY_SETPOINT_REG_OFFSET		((uint8_t)5)
-#define MOTOR_OPERATING_VOLTAGE_REG_OFFSET			((uint8_t)6)
-#define ENCODER_MAX_COUNT_REG_OFFSET				((uint8_t)7)
-#define MOTOR_GEARBOX_RATIO_REG_OFFSET				((uint8_t)8)
-#define MOTOR_MAX_VELOCITY_REG_OFFSET				((uint8_t)9)
-#define MOTOR_STATUS_REG_OFFSET						((uint8_t)10)
-#define P_GAIN_REG_OFFSET							((uint8_t)11)
-#define I_GAIN_REG_OFFSET							((uint8_t)13)
-#define D_GAIN_REG_OFFSET							((uint8_t)15)
+#define	IS_INITIALIZED_START_ADR					((uint16_t)0x0001)
+#define DEFAULT_POSITION_SETPOINT_START_ADR			((uint16_t)0x0002)
+#define DEFAULT_VELOCITY_SETPOINT_START_ADR			((uint16_t)0x0006)
+#define MOTOR_OPERATING_VOLTAGE_START_ADR			((uint16_t)0x0007)
+#define ENCODER_MAX_COUNT_START_ADR					((uint16_t)0x0008)
+#define MOTOR_GEARBOX_RATIO_START_ADR				((uint16_t)0x0009)
+#define MOTOR_MAX_VELOCITY_START_ADR				((uint16_t)0x000A)
+#define MOTOR_STATUS_REG_START_ADR					((uint16_t)0x000B)
+#define P_GAIN_START_ADR							((uint16_t)0x000C)
+#define I_GAIN_START_ADR							((uint16_t)0x000E)
+#define D_GAIN_START_ADR							((uint16_t)0x0010)
+
+typedef enum
+{
+	VARIABLE_FOUND = 0,
+	VARIABLE_NOT_FOUND,
+	NO_VALID_PAGE_ERROR = 171
+} PARAM_Read_Status_e;
 
 typedef union
 {
@@ -56,3 +63,31 @@ typedef union
 		float d_gain;
 	};
 } device_registers_t;
+
+FLASH_Status app_params_init(void);
+PARAM_Read_Status_e app_params_read_all(void);
+FLASH_Status app_params_write_all(device_registers_t * wparams);
+uint8_t app_params_get_is_init(void);
+int64_t app_params_get_deafult_position_setpoint(void);
+int16_t app_params_get_default_velocity_setpoint(void);
+uint8_t app_params_get_motor_operating_voltage(void);
+uint16_t app_params_get_encoder_max_count(void);
+uint16_t app_params_get_motor_gearbox_ration(void);
+uint16_t app_params_get_motor_max_velocity(void);
+bool app_params_get_is_have_gearbox_flag(void);
+float app_params_get_P_gain(void);
+float app_params_get_I_gain(void);
+float app_params_get_D_gain(void);
+FLASH_Status app_params_set_is_init(uint16_t ii);
+FLASH_Status app_params_set_deafult_position_setpoint(int64_t dps);
+FLASH_Status app_params_set_default_velocity_setpoint(int16_t dvs);
+FLASH_Status app_params_set_motor_operating_voltage(uint16_t mov);
+FLASH_Status app_params_set_encoder_max_count(uint16_t emc);
+FLASH_Status app_params_set_motor_gearbox_ration(uint16_t mgr);
+FLASH_Status app_params_set_motor_max_velocity(uint16_t mmv);
+FLASH_Status app_params_set_is_have_gearbox_flag(bool ihgf);
+FLASH_Status app_params_set_P_gain(float pg);
+FLASH_Status app_params_set_I_gain(float ig);
+FLASH_Status app_params_set_D_gain(float dg);
+
+#endif /* __APP_PARAMS_H */
