@@ -89,6 +89,7 @@ const uint8_t digit_mask[] =
 		0x5e,   // D 0b01011110
 		0x79,   // E 0b01111001
 		0x71,   // F 0b01110001
+		0x73,	// P 0b01110011
 		0x40,   // - 0b01000000
 		0x00    // nothing 0b00000000
 };
@@ -441,6 +442,10 @@ static uint8_t _convert_char_to_digit(uint8_t c)
 	{
 		result = c - ASCII_OFFSET_STRING;
 	}
+	else if(c == 'P')
+	{
+		result = INDEX_P_CHARACTER;
+	}
 	else if(c == '-')
 	{
 		result = INDEX_NEGATIVE_SIGN;
@@ -466,6 +471,10 @@ static void _separate_string_to_digits(uint8_t * str, uint8_t * dst)
 		else if (('A' <= str[i]) && (str[i] <= 'F'))
 		{
 			dst[i] = str[i] - ASCII_OFFSET_STRING;
+		}
+		else if(str[i] == 'P')
+		{
+			dst[i] = INDEX_P_CHARACTER;
 		}
 		else if(str[i] == '-')
 		{

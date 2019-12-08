@@ -48,8 +48,9 @@
 #define COLON_ON   					0x80						/*!< The clock points on definition */
 #define COLON_OFF					0							/*!< The clock points off definition */
 // Special characters index of tube table
-#define INDEX_NEGATIVE_SIGN			0x10						/*!< Index of "minus" character mask */
-#define INDEX_BLANK			   		0x11						/*!< Index of the blank character mask */
+#define INDEX_P_CHARACTER			0x10						/*!< Index of "P" character mask */
+#define INDEX_NEGATIVE_SIGN			0x11						/*!< Index of "minus" character mask */
+#define INDEX_BLANK			   		0x12						/*!< Index of the blank character mask */
 #define DIGIT_MAX_LENGTH			0x12						/*!< The length of the array with digits mask */
 #define DIGIT_ERROR					0x00						/*!< Define for error character */
 #define ASCII_OFFSET_NUMBER			0x30						/*!< Offset to the ASCII table for numbers */
