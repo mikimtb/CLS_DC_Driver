@@ -17,6 +17,7 @@
 #include "user_beeper.h"
 #include "app_params.h"
 #include "motion_controller.h"
+#include "config_menu.h"
 
 #define EVENT_BUFFER_SIZE					128
 #define CHANGE_VELOCITY_STATE_TIMEOUT_TIME	1500
@@ -60,6 +61,7 @@ typedef enum _fsm_states_e
 	show_velocity_state,
 	alarm_state,
 	menu_items_state,
+	menu_selected_item_state,
 	n_states
 } fsm_states_e;
 

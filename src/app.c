@@ -36,6 +36,11 @@ static void fsm_change_vel_state(fsm_events_e e);
 static void fsm_show_velocity_state(fsm_events_e e);
 static void fsm_alarm_state(fsm_events_e e);
 static void fsm_menu_state(fsm_events_e e);
+static void fsm_menu_item_selected(fsm_events_e e);
+
+// MENU Callback Declaration
+static void set_alarm_handler(fsm_events_e e);
+static void set_default_position_setpoint_handler(fsm_events_e e);
 
 // Macros
 CIRCBUFF_DEF(fsm_events_buff, EVENT_BUFFER_SIZE);
@@ -71,14 +76,21 @@ ctimer_t timers[TMR_NUM] = {{"FSM TMR", DISABLED, 0, 2000, on_fsm_timeout_tmr_ti
 
 // Finite State Machine Matrix
 static state_function_t state_matrix[n_states][n_events] =
-{						/* pwr_up_e		/ 	btn_ss_click_e   /	btn_up_click_e 	  	/	btn_down_click_e  /		btn_set_click_e  /			btn_set_long_press_e / 	fsm_timeout_e /	fsm_alarm_e
-/* init */				{fsm_run_state, 	NULL, 				NULL, 					NULL, 					NULL, 						NULL, 					NULL, 			NULL			},
-/* run */				{NULL, 				fsm_run_state,		fsm_change_vel_state, 	fsm_change_vel_state, 	fsm_show_velocity_state,	fsm_menu_state, 		NULL, 			fsm_alarm_state },
-/* change_velocity */	{NULL, 				fsm_run_state, 		fsm_change_vel_state, 	fsm_change_vel_state, 	fsm_show_velocity_state,	NULL, 					fsm_run_state, 	fsm_alarm_state },
-/* show_velocity */		{NULL, 				fsm_run_state, 		fsm_change_vel_state, 	fsm_change_vel_state, 	NULL, 						NULL, 					fsm_run_state, 	fsm_alarm_state },
-/* alarm */				{NULL, 				fsm_run_state, 		fsm_run_state,		 	fsm_run_state,		 	fsm_run_state,				NULL, 					NULL,		 	NULL,		  	},
-/* menu */				{NULL, 				NULL, 				fsm_menu_state, 		fsm_menu_state, 		fsm_menu_state, 			fsm_run_state, 			fsm_run_state, 	fsm_alarm_state }
+{						/* pwr_up_e		/ 	btn_ss_click_e   /		btn_up_click_e 	  	/	btn_down_click_e  /		btn_set_click_e  /			btn_set_long_press_e / 	fsm_timeout_e /	fsm_alarm_e
+/* init */				{fsm_run_state, 	NULL, 					NULL, 					NULL, 					NULL, 						NULL, 					NULL, 			NULL			},
+/* run */				{NULL, 				fsm_run_state,			fsm_change_vel_state, 	fsm_change_vel_state, 	fsm_show_velocity_state,	fsm_menu_state, 		NULL, 			fsm_alarm_state },
+/* change_velocity */	{NULL, 				fsm_run_state, 			fsm_change_vel_state, 	fsm_change_vel_state, 	fsm_show_velocity_state,	NULL, 					fsm_run_state, 	fsm_alarm_state },
+/* show_velocity */		{NULL, 				fsm_run_state, 			fsm_change_vel_state, 	fsm_change_vel_state, 	NULL, 						NULL, 					fsm_run_state, 	fsm_alarm_state },
+/* alarm */				{NULL, 				fsm_run_state, 			fsm_run_state,		 	fsm_run_state,		 	fsm_run_state,				NULL, 					NULL,		 	NULL		  	},
+/* menu */				{NULL, 				NULL, 					fsm_menu_state,			fsm_menu_state, 		fsm_menu_item_selected, 	fsm_run_state, 			NULL, 			NULL 			},
+/* menu_item_selected */{NULL, 				NULL,					fsm_menu_item_selected, fsm_menu_item_selected, fsm_menu_state, 			NULL,			 		NULL, 			NULL 			}
 };
+
+// Configuration Menu Nodes Objects
+struct menu_node *config_menu;
+// Add as many objects as menu has nodes
+struct menu_node set_alarm_node;
+struct menu_node set_default_position_setpoint_node;
 
 // Finite State Machine Object
 fsm_t app_fsm;
@@ -89,13 +101,20 @@ void app_init()
 	uint8_t i = 0;
 	device_registers_t dp;
 
-	// Buttons BSP initialization
+	//***************************************//
+	//*   Push Buttons Inits START Here     *//
+	//***************************************//
 	for (i=0; i<BTN_NUM; i++)
 	{
 		button_init(&buttons[i]);
 	}
+	//**************************************//
+	//*    Push Buttons Inits ENDS Here    *//
+	//************************************* //
 
-	// Init EEPROM and read all parameters
+	//****************************************************//
+	//*    EEPROM Inits and Params Restore START Here    *//
+	//****************************************************//
 	if (app_params_init() != FLASH_COMPLETE)
 	{
 		error_handler(EEPROM_INIT_FAILED);
@@ -105,23 +124,13 @@ void app_init()
 	{
 		error_handler(EEPROM_READ_FAILED);
 	}
-	// FSM Init
-	fsm_init_state(pwr_up_event);
-	// Push power up event to buffer to initiate state machine running
-	PUSH_EVENT(fsm_events_buff, pwr_up_event);
+	//***************************************************//
+	//*    EEPROM Inits and Params Restore ENDS Here    *//
+	//***************************************************//
 
-	clock_init();
-	clock_enable(ENABLE);
-	alarm_init();
-	//alarm_set(0, 15);
-	//alarm_enable(ENABLE);
-
-	//Display initialization
-	TM1637_init();
-	TM1637_set_mode(tm1637_mode_constant_on);
-	//TM1637_on_off(DISP_ON);
-
-	// Motion controller initialization
+	//********************************************//
+	//*    Motion Controller Inits START Here    *//
+	//********************************************//
 	// Copy all parameters to the temp variable
 	for (i=0;i<DEVICE_REG_NUM; i++)
 	{
@@ -132,13 +141,66 @@ void app_init()
 	{
 		// If not, go to wizard to initialize the device
 	}
-	// Init motion controller
+
 	motion_controller_init_motor_params(dp.motor_operating_voltage, dp.encoder_max_count, dp.motor_status_reg_bits.IS_HAVE_GEARBOX, dp.motor_gearbox_ratio, dp.motor_max_velocity);
 	motion_controller_init_PID_params(dp.p_gain, dp.i_gain, dp.d_gain);
 	motion_controller_init_default_setpoints(dp.default_position_setpoint, dp.default_velocity_setpoint);
-	// Beeper BSP initialization
+	//*******************************************//
+	//*		 Motion Controller Inits ENDS Here 	*//
+	//*******************************************//
+
+	//*********************************//
+	//*	   Beeper Inits START Here    *//
+	//*********************************//
 	beeper_init();
 	//beeper_start(&long_beep);
+	//********************************//
+	//*    Beeper Inits ENDS Here    *//
+	//********************************//
+
+	//******************************//
+	//*    FSM Inits START Here    *//
+	//******************************//
+	fsm_init_state(pwr_up_event);
+	// Push power up event to buffer to initiate state machine running
+	PUSH_EVENT(fsm_events_buff, pwr_up_event);
+	//*****************************//
+	//*    FSM Inits ENDS Here    *//
+	//*****************************//
+
+	//******************************************//
+	//*    Clock and Alarm Inits START Here    *//
+	//******************************************//
+	clock_init();
+	clock_enable(ENABLE);
+	alarm_init();
+	//alarm_set(0, 15);
+	//alarm_enable(ENABLE);
+	//*****************************************//
+	//*    Clock and Alarm Inits ENDS Here    *//
+	//*****************************************//
+
+	//**********************************//
+	//*    Display Inits START Here    *//
+	//**********************************//
+	TM1637_init();
+	TM1637_set_mode(tm1637_mode_constant_on);
+	//TM1637_on_off(DISP_ON);
+	//*********************************//
+	//*    Display Inits ENDS Here    *//
+	//*********************************//
+
+	//*******************************//
+	//*    MENU Inits START Here    *//
+	//*******************************//
+	MENU_build_node(&set_alarm_node, "A   ", NULL, NULL, NULL, &set_default_position_setpoint_node, set_alarm_handler);
+	MENU_build_node(&set_default_position_setpoint_node, "P1  ", NULL, NULL, &set_alarm_node, NULL, set_default_position_setpoint_handler);
+
+	config_menu = &set_alarm_node;
+	//******************************//
+	//*    MENU Inits ENDS Here    *//
+	//******************************//
+
 
 	timer_enable(&timers[RTC_TMR], ENABLE);
 }
@@ -352,6 +414,7 @@ static void fsm_run_state(fsm_events_e e)
 		beeper_stop();
 		break;
 	case menu_items_state:
+		app_fsm.disp_mode = show_clock;
 		break;
 	}
 
@@ -428,8 +491,9 @@ static void fsm_alarm_state(fsm_events_e e)
 {
 	app_fsm.prevous_state = app_fsm.current_state;
 	app_fsm.current_state = alarm_state;
+
 	// Enable alarm
-	beeper_start(&alarm_beep);
+		beeper_start(&alarm_beep);
 
 #ifdef USE_UART_CONSOLE
 	printf("<ALARM STATE> \r\n");
@@ -441,7 +505,60 @@ static void fsm_menu_state(fsm_events_e e)
 	app_fsm.prevous_state = app_fsm.current_state;
 	app_fsm.current_state = menu_items_state;
 
+	// Take control against the display
+	app_fsm.disp_mode = ext_control;
+
+	switch (e)
+	{
+	case btn_up_click_event:
+		MENU_up(&config_menu);
+		TM1637_display_string(config_menu->name);
+		break;
+	case btn_down_click_event:
+		MENU_down(&config_menu);
+		TM1637_display_string(config_menu->name);
+		break;
+	case btn_set_click_event:
+		if(app_fsm.prevous_state == menu_selected_item_state)
+		{
+			printf("Configuration accepted... \r\n");
+		}
+		break;
+		TM1637_display_string(config_menu->name);
+	case btn_set_long_press_event:
+		TM1637_display_string(config_menu->name);
+		break;
+	}
+
 #ifdef USE_UART_CONSOLE
-	printf("<MENU STATE> \r\n");
+	printf("<MENU ITEMS STATE> \r\n");
 #endif
 }
+
+static void fsm_menu_item_selected(fsm_events_e e)
+{
+	app_fsm.prevous_state = app_fsm.current_state;
+	app_fsm.current_state = menu_selected_item_state;
+
+	config_menu->menu_item_handler(e);
+
+#ifdef USE_UART_CONSOLE
+	printf("<MENU_ITEM SELECTED STATE> \r\n");
+#endif
+}
+
+// MENU Callback Declaration
+static void set_alarm_handler(fsm_events_e e)
+{
+#ifdef USE_UART_CONSOLE
+	printf("set_alarm_handler called... \r\n");
+#endif
+}
+
+static void set_default_position_setpoint_handler(fsm_events_e e)
+{
+#ifdef USE_UART_CONSOLE
+	printf("Set_default_position_setpoint_handler... \r\n");
+#endif
+}
+
