@@ -41,6 +41,15 @@ static void fsm_menu_item_selected(fsm_events_e e);
 // MENU Callback Declaration
 static void set_alarm_handler(fsm_events_e e);
 static void set_default_position_setpoint_handler(fsm_events_e e);
+static void set_default_velocity_setpoint_handler(fsm_events_e e);
+static void set_motor_operating_voltage_handler(fsm_events_e e);
+static void set_encoder_max_count_handler(fsm_events_e e);
+static void set_motor_gearbox_ratio_handler(fsm_events_e e);
+static void set_motor_max_velocity_handler(fsm_events_e e);
+static void set_motor_is_have_gearbox_handler(fsm_events_e e);
+static void set_p_gain_handler(fsm_events_e e);
+static void set_i_gain_handler(fsm_events_e e);
+static void set_d_gain_handler(fsm_events_e e);
 
 // Macros
 CIRCBUFF_DEF(fsm_events_buff, EVENT_BUFFER_SIZE);
@@ -91,6 +100,15 @@ struct menu_node *config_menu;
 // Add as many objects as menu has nodes
 struct menu_node set_alarm_node;
 struct menu_node set_default_position_setpoint_node;
+struct menu_node set_default_velocity_setpoint_node;
+struct menu_node set_motor_operating_voltage_node;
+struct menu_node set_encoder_max_count_node;
+struct menu_node set_motor_gearbox_ratio_node;
+struct menu_node set_motor_max_velocity_node;
+struct menu_node set_motor_is_have_gearbox_node;
+struct menu_node set_p_gain_node;
+struct menu_node set_i_gain_node;
+struct menu_node set_d_gain_node;
 
 // Finite State Machine Object
 fsm_t app_fsm;
@@ -193,8 +211,17 @@ void app_init()
 	//*******************************//
 	//*    MENU Inits START Here    *//
 	//*******************************//
-	MENU_build_node(&set_alarm_node, "A   ", NULL, NULL, NULL, &set_default_position_setpoint_node, set_alarm_handler);
-	MENU_build_node(&set_default_position_setpoint_node, "P1  ", NULL, NULL, &set_alarm_node, NULL, set_default_position_setpoint_handler);
+	MENU_build_node(&set_alarm_node, "A   ", NULL, NULL, &set_d_gain_node, &set_default_position_setpoint_node, set_alarm_handler);
+	MENU_build_node(&set_default_position_setpoint_node, "P1  ", NULL, NULL, &set_alarm_node, &set_default_velocity_setpoint_node, set_default_position_setpoint_handler);
+	MENU_build_node(&set_default_velocity_setpoint_node, "P2  ", NULL, NULL, &set_default_position_setpoint_node, &set_motor_operating_voltage_node, set_default_velocity_setpoint_handler);
+	MENU_build_node(&set_motor_operating_voltage_node, "P3  ", NULL, NULL, &set_default_velocity_setpoint_node, &set_encoder_max_count_node, set_motor_operating_voltage_handler);
+	MENU_build_node(&set_encoder_max_count_node, "P4  ", NULL, NULL, &set_motor_operating_voltage_node, &set_motor_gearbox_ratio_node, set_encoder_max_count_handler);
+	MENU_build_node(&set_motor_gearbox_ratio_node, "P5  ", NULL, NULL, &set_encoder_max_count_node, &set_motor_max_velocity_node, set_motor_gearbox_ratio_handler);
+	MENU_build_node(&set_motor_max_velocity_node, "P6  ", NULL, NULL, &set_motor_gearbox_ratio_node, &set_motor_is_have_gearbox_node, set_motor_max_velocity_handler);
+	MENU_build_node(&set_motor_is_have_gearbox_node, "P7  ", NULL, NULL, &set_motor_max_velocity_node, &set_p_gain_node, set_motor_is_have_gearbox_handler);
+	MENU_build_node(&set_p_gain_node, "P8  ", NULL, NULL, &set_motor_is_have_gearbox_node, &set_i_gain_node, set_p_gain_handler);
+	MENU_build_node(&set_i_gain_node, "P9  ", NULL, NULL, &set_p_gain_node, &set_d_gain_node, set_i_gain_handler);
+	MENU_build_node(&set_d_gain_node, "P10 ", NULL, NULL, &set_i_gain_node, &set_alarm_node, set_d_gain_handler);
 
 	config_menu = &set_alarm_node;
 	//******************************//
@@ -560,5 +587,50 @@ static void set_default_position_setpoint_handler(fsm_events_e e)
 #ifdef USE_UART_CONSOLE
 	printf("Set_default_position_setpoint_handler... \r\n");
 #endif
+}
+
+static void set_default_velocity_setpoint_handler(fsm_events_e e)
+{
+
+}
+
+static void set_motor_operating_voltage_handler(fsm_events_e e)
+{
+
+}
+
+static void set_encoder_max_count_handler(fsm_events_e e)
+{
+
+}
+
+static void set_motor_gearbox_ratio_handler(fsm_events_e e)
+{
+
+}
+
+static void set_motor_max_velocity_handler(fsm_events_e e)
+{
+
+}
+
+static void set_motor_is_have_gearbox_handler(fsm_events_e e)
+{
+
+}
+
+static void set_p_gain_handler(fsm_events_e e)
+{
+
+}
+
+static void set_i_gain_handler(fsm_events_e e)
+{
+
+}
+
+static void set_d_gain_handler(fsm_events_e e)
+{
+
 }
 
