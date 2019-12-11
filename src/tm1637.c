@@ -260,13 +260,21 @@ void TM1637_set_mode(tm1637_mode_e mode)
 	_disp.mode = mode;
 	if(mode == tm1637_mode_blinking)
 	{
-		timer_enable(&blinking_tmr, ENABLE);
+		if(timer_get_status(&blinking_tmr) == DISABLED)
+		{
+			timer_enable(&blinking_tmr, ENABLE);
+		}
 	}
 	else
 	{
 		timer_enable(&blinking_tmr, DISABLE);
 		TM1637_on_off(DISP_ON);
 	}
+}
+
+tm1637_mode_e TM1637_get_mode()
+{
+	return _disp.mode;
 }
 
 // Private functions implementation

@@ -122,5 +122,15 @@ void TM1637_on_off(uint8_t status);
  * the display is on it will be off and vice versa.
  */
 void TM1637_toggle(void);
+/**
+ * Function sets display mode
+ * @param [in] mode can be tm1637_mode_blinking, tm1637_mode_constant_on
+ */
+void TM1637_set_mode(tm1637_mode_e mode);
+/**
+ * Function returns current display mode
+ * @return tm1637_mode_blinking or tm1637_mode_constant_on
+ */
+tm1637_mode_e TM1637_get_mode(void);
 
 #endif
