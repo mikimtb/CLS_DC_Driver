@@ -71,6 +71,11 @@ void alarm_enable(FunctionalState new_state)
 	app_alarm.status = new_state;
 }
 
+FunctionalState alarm_get_enable_status()
+{
+	return app_alarm.status;
+}
+
 bool alarm_update()
 {
 	bool result = false;
