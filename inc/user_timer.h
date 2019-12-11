@@ -35,6 +35,13 @@ typedef struct _ctimer_t
 void timer_enable(ctimer_t* tmr, FunctionalState new_state);
 
 /**
+ * Function return timer current state
+ * @param [in] tmr - pointer to the timer the status shod be returned
+ * @return DISABLED or ENABLED depending on the current timer status
+ */
+FunctionalState timer_get_status(ctimer_t *tmr);
+
+/**
  * The function change tick interval of tmr timer
  * @param [in] tmr - pointer to the timer
  * @param [in] new_interval - desired tick interval in milliseconds

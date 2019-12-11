@@ -19,6 +19,11 @@ void timer_enable(ctimer_t* tmr, FunctionalState new_state)
 	}
 }
 
+FunctionalState timer_get_status(ctimer_t *tmr)
+{
+	return tmr->current_state;
+}
+
 void timer_set_tick_interval(ctimer_t* tmr, uint32_t new_interval)
 {
 	tmr->tick_interval = new_interval;
