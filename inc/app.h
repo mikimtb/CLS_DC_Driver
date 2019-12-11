@@ -9,6 +9,7 @@
 #define APP_H_
 
 #include "definitions.h"
+#include <stdbool.h>
 #include "htec_ring_buffer.h"
 #include "user_clock.h"
 #include "tm1637.h"

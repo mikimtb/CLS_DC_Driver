@@ -83,6 +83,10 @@ static beeper_t alarm_beep = {.m = { .tones = tone3, .tone_max_count = 12}, .bee
 ctimer_t timers[TMR_NUM] = {{"FSM TMR", DISABLED, 0, 2000, on_fsm_timeout_tmr_tick},
 							{"RTC TMR", DISABLED, 0, 1000, on_rtc_generator_tmr_tick}};
 
+my_clock_t temp_alarm = {DISABLED, 0, 0};
+bool set_hours_or_minutes = false;
+
+
 // Finite State Machine Matrix
 static state_function_t state_matrix[n_states][n_events] =
 {						/* pwr_up_e		/ 	btn_ss_click_e   /		btn_up_click_e 	  	/	btn_down_click_e  /		btn_set_click_e  /			btn_set_long_press_e / 	fsm_timeout_e /	fsm_alarm_e
@@ -92,7 +96,7 @@ static state_function_t state_matrix[n_states][n_events] =
 /* show_velocity */		{NULL, 				fsm_run_state, 			fsm_change_vel_state, 	fsm_change_vel_state, 	NULL, 						NULL, 					fsm_run_state, 	fsm_alarm_state },
 /* alarm */				{NULL, 				fsm_run_state, 			fsm_run_state,		 	fsm_run_state,		 	fsm_run_state,				NULL, 					NULL,		 	NULL		  	},
 /* menu */				{NULL, 				NULL, 					fsm_menu_state,			fsm_menu_state, 		fsm_menu_item_selected, 	fsm_run_state, 			NULL, 			NULL 			},
-/* menu_item_selected */{NULL, 				NULL,					fsm_menu_item_selected, fsm_menu_item_selected, fsm_menu_state, 			NULL,			 		NULL, 			NULL 			}
+/* menu_item_selected */{NULL, 				fsm_menu_item_selected,	fsm_menu_item_selected, fsm_menu_item_selected, fsm_menu_item_selected, 	fsm_menu_state,			NULL, 			NULL 			}
 };
 
 // Configuration Menu Nodes Objects
@@ -170,7 +174,9 @@ void app_init()
 	//*********************************//
 	//*	   Beeper Inits START Here    *//
 	//*********************************//
+#ifdef USE_BEEPER
 	beeper_init();
+#endif
 	//beeper_start(&long_beep);
 	//********************************//
 	//*    Beeper Inits ENDS Here    *//
@@ -545,14 +551,17 @@ static void fsm_menu_state(fsm_events_e e)
 		MENU_down(&config_menu);
 		TM1637_display_string(config_menu->name);
 		break;
-	case btn_set_click_event:
-		if(app_fsm.prevous_state == menu_selected_item_state)
-		{
-			printf("Configuration accepted... \r\n");
-		}
-		break;
-		TM1637_display_string(config_menu->name);
 	case btn_set_long_press_event:
+		if (app_fsm.prevous_state == menu_selected_item_state)
+		{
+			// Returned from param config, reset temp variables
+			// Temp variables for alarm
+			temp_alarm.minutes = 0;
+			temp_alarm.hours = 0;
+			set_hours_or_minutes = false;
+		}
+
+		TM1637_set_mode(tm1637_mode_constant_on);
 		TM1637_display_string(config_menu->name);
 		break;
 	}
@@ -577,8 +586,104 @@ static void fsm_menu_item_selected(fsm_events_e e)
 // MENU Callback Declaration
 static void set_alarm_handler(fsm_events_e e)
 {
+	switch (e)
+	{
+	case btn_up_click_event:
+		if (set_hours_or_minutes == false)
+		{
+			temp_alarm.minutes++;
+			if (temp_alarm.minutes >= MINUTES_MAX)
+			{
+				temp_alarm.minutes = 0;
+			}
+		}
+		else
+		{
+			temp_alarm.hours++;
+			if (temp_alarm.hours >= HOURS_MAX)
+			{
+				temp_alarm.hours = 0;
+			}
+		}
+
+		TM1637_display_time(temp_alarm.hours, temp_alarm.minutes);
+
+		break;
+	case btn_down_click_event:
+		if (set_hours_or_minutes == false)
+		{
+			if (temp_alarm.minutes > 0)
+			{
+				temp_alarm.minutes--;
+			}
+			else
+			{
+				temp_alarm.minutes = MINUTES_MAX-1;
+			}
+		}
+		else
+		{
+			if (temp_alarm.hours > 0)
+			{
+				temp_alarm.hours--;
+			}
+			else
+			{
+				temp_alarm.hours = HOURS_MAX - 1;
+			}
+		}
+
+		TM1637_display_time(temp_alarm.hours, temp_alarm.minutes);
+
+		break;
+	case btn_start_stop_click_event:
+		if (set_hours_or_minutes == true)
+		{
+			set_hours_or_minutes = false;
+		}
+		else
+		{
+			set_hours_or_minutes = true;
+		}
+		break;
+	case btn_set_click_event:
+		if (app_fsm.prevous_state == menu_items_state)
+		{
+			/*
+			 * New settings session is initiated read current
+			 * alarm value and show on the display. Start
+			 * display blinking if alarm is disabled
+			 */
+			temp_alarm.minutes = alarm_get_minutes();
+			temp_alarm.hours = alarm_get_hours();
+			if (alarm_get_enable_status() == DISABLED)
+			{
+				TM1637_set_mode(tm1637_mode_blinking);
+			}
+			else
+			{
+				TM1637_set_mode(tm1637_mode_constant_on);
+			}
+			TM1637_display_time(temp_alarm.hours, temp_alarm.minutes);
+		}
+		else
+		{
+			if (alarm_get_enable_status() == DISABLED)
+			{
+				alarm_set(temp_alarm.hours, temp_alarm.minutes);
+				alarm_enable(ENABLE);
+				TM1637_set_mode(tm1637_mode_constant_on);
+			}
+			else
+			{
+				alarm_enable(DISABLE);
+				TM1637_set_mode(tm1637_mode_blinking);
+			}
+		}
+		break;
+	}
 #ifdef USE_UART_CONSOLE
-	printf("set_alarm_handler called... \r\n");
+	printf("Set_alarm_handler called... \r\n");
 #endif
 }
 
