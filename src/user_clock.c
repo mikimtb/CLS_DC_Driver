@@ -76,6 +76,16 @@ FunctionalState alarm_get_enable_status()
 	return app_alarm.status;
 }
 
+uint8_t alarm_get_minutes()
+{
+	return app_alarm.minutes;
+}
+
+uint8_t alarm_get_hours()
+{
+	return app_alarm.hours;
+}
+
 bool alarm_update()
 {
 	bool result = false;

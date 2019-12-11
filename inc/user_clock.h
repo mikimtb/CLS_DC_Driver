@@ -28,6 +28,8 @@ void alarm_init(void);
 void alarm_set(uint8_t h, uint8_t m);
 void alarm_enable(FunctionalState new_state);
 FunctionalState alarm_get_enable_status(void);
+uint8_t alarm_get_minutes(void);
+uint8_t alarm_get_hours(void);
 bool alarm_update(void);
 
 #endif /* USER_CLOCK_H_ */
