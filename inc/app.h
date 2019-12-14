@@ -20,10 +20,14 @@
 #include "motion_controller.h"
 #include "config_menu.h"
 
-#define EVENT_BUFFER_SIZE					128
-#define CHANGE_VELOCITY_STATE_TIMEOUT_TIME	1500
-#define SHOW_VELOCITY_STATE_TIMEOUT_TIME	3000
+#define EVENT_BUFFER_SIZE							128
+#define CHANGE_VELOCITY_STATE_TIMEOUT_TIME			1500
+#define SHOW_VELOCITY_STATE_TIMEOUT_TIME			3000
 
+#define UP_DOWN_BTN_LONG_PRESS_INC_DEC_STEP			((uint8_t)10)
+#define UP_DOWN_BTN_CLICK_FLOAT_INC_DEC_STEP		((float)0.05)
+#define UP_DOWN_BTN_LONG_PRESS_FLOAT_INC_DEC_STEP	((float)0.5)
+#define PID_GAIN_MAX								((float)30.00)
 /**
  * Macro definitions
  * The macros should be used to push and pop events to and from stack
@@ -71,7 +75,9 @@ typedef enum _fsm_events_e
 	pwr_up_event = 0,
 	btn_start_stop_click_event,
 	btn_up_click_event,
+	btn_up_long_press_event,
 	btn_down_click_event,
+	btn_down_long_press_event,
 	btn_set_click_event,
 	btn_set_long_press_event,
 	fsm_timeout_tmr_event,

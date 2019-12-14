@@ -25,10 +25,14 @@
 #define ZERO_DUTY				1200					/*!< Define PWM duty cycle at which the voltage in the H bridge is 0V*/
 #define PWM_MAX_OUT				ZERO_DUTY-1
 
-#define MOVEMENT_THRESHOLD		30					/*!< Minimal movement of the motor shaft that initiates new angular velocity calculation */
-#define MAX_NUMBER_OF_CYCLES    4					/*!< Maximal number of cycles before angular velocity calculation is initiated */
-#define TIME_STAMP				0.01				/*!< Control loop time stamp in seconds */
+#define MOVEMENT_THRESHOLD		30						/*!< Minimal movement of the motor shaft that initiates new angular velocity calculation */
+#define MAX_NUMBER_OF_CYCLES    4						/*!< Maximal number of cycles before angular velocity calculation is initiated */
+#define TIME_STAMP				0.01					/*!< Control loop time stamp in seconds */
 
+#define MAX_OUTPUT_VOLTAGE		((uint8_t)12)			/*!< Maximal voltage that can be generated at the output of the driver */
+#define MAX_ENC_PULSES			((uint16_t)500)			/*<! Maximal number of single pulses per revolution for the connected encoder */
+#define MAX_GB_RATIO			((uint8_t)100)			/*<! Maximal gearbox ration that can be selected */
+#define MAX_VELOCITY			((uint16_t)5000)		/*<! Maximal velocity that can be selected */
 /**
  * The enumeration for the direction of rotation
  */

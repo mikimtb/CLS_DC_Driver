@@ -20,31 +20,10 @@ void error_handler(errors_e error_code);
 
 int main(void)
 {
-
-//	uint16_t data1, data2;
-//	device_registers_t wparams;
-
-
 	delay_init();
 #ifdef USE_UART_CONSOLE
 	console_init();
 #endif
-
-//	wparams.is_initialized = 0x59;
-//	wparams.default_position_setpoint = 0;
-//	wparams.default_velocity_setpoint = 5;
-//	wparams.motor_operating_voltage = 12;
-//	wparams.encoder_max_count = 128;
-//	wparams.motor_gearbox_ratio = 26;
-//	wparams.motor_max_velocity = 200;
-//	wparams.motor_status_reg_bits.IS_HAVE_GEARBOX = 1;
-//	wparams.p_gain = 1;
-//	wparams.i_gain = 0;
-//	wparams.d_gain = 0;
-//
-//	app_params_init();
-//	//app_params_read_all();
-//	app_params_write_all(&wparams);
 
 	app_init();
 
@@ -59,5 +38,17 @@ int main(void)
 
 void error_handler(errors_e error_code)
 {
+	switch (error_code)
+	{
+		case NO_ERROR:
+			break;
+		case EEPROM_INIT_FAILED:
+			break;
+		case EEPROM_READ_FAILED:
+			break;
+		case EEPROM_WRITE_FAILED:
+			break;
+	}
 
+	printf("[ERROR]: %u\r\n", error_code);
 }

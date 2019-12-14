@@ -285,7 +285,7 @@ static void _on_TM1637_tmr_tick()
 		TM1637_toggle();
 	}
 
-#ifdef USE_UART_CONSOLE
+#ifdef USE_DEBUG_CONSOLE
 	printf("%s Timer Tick Happened \r\n", blinking_tmr.name);
 #endif
 }

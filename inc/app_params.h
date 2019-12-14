@@ -12,7 +12,9 @@
 #include "definitions.h"
 #include "eeprom.h"
 
-#define DEVICE_REG_NUM	((uint8_t)0x11)
+#define DEVICE_CONFIGURED							((uint16_t)0x59)
+
+#define DEVICE_REG_NUM								((uint8_t)0x11)
 
 #define	IS_INITIALIZED_START_ADR					((uint16_t)0x0001)
 #define DEFAULT_POSITION_SETPOINT_START_ADR			((uint16_t)0x0002)

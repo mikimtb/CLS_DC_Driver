@@ -15,6 +15,9 @@
 #define USE_UART_CONSOLE 1 											/*!< Define USE_UART_CONSOLE to use console port for the configurations and debug console */
 #define CONSOLE_BUFFER_SIZE	32										/*!< UART console ring buffer size definition, used on console_uart.c */
 
+//#define USE_DEBUG_CONSOLE 1
+//#define USE_BEEPER	1
+
 // Push Buttons definition
 #define START_STOP_BTN_CLK			RCC_APB2Periph_GPIOB
 #define START_STOP_BTN_PORT			GPIOB
@@ -31,6 +34,9 @@
 #define SET_BTN_CLK					RCC_APB2Periph_GPIOB
 #define SET_BTN_PORT				GPIOB
 #define SET_BTN_PIN					GPIO_Pin_14
+
+#define MINUTES_MAX					((uint8_t)60)
+#define HOURS_MAX					((uint8_t)100)
 
 // Global typedefs
 typedef enum _functional_states_e
