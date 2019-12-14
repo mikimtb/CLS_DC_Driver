@@ -28,6 +28,7 @@
 #define UP_DOWN_BTN_CLICK_FLOAT_INC_DEC_STEP		((float)0.05)
 #define UP_DOWN_BTN_LONG_PRESS_FLOAT_INC_DEC_STEP	((float)0.5)
 #define PID_GAIN_MAX								((float)30.00)
+#define MAX_RAMP_TIME								((uint8_t)10)
 /**
  * Macro definitions
  * The macros should be used to push and pop events to and from stack

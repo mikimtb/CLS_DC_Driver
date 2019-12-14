@@ -50,6 +50,8 @@ static void set_motor_is_have_gearbox_handler(fsm_events_e e);
 static void set_p_gain_handler(fsm_events_e e);
 static void set_i_gain_handler(fsm_events_e e);
 static void set_d_gain_handler(fsm_events_e e);
+static void set_acceleration_time_handler(fsm_events_e e);
+static void set_deacceleration_time_handler(fsm_events_e e);
 
 // Application static function prototypes
 static void refresh_device_parameters(void);
@@ -116,6 +118,8 @@ struct menu_node set_motor_is_have_gearbox_node;
 struct menu_node set_p_gain_node;
 struct menu_node set_i_gain_node;
 struct menu_node set_d_gain_node;
+struct menu_node set_acc_time_node;
+struct menu_node set_deacc_time_node;
 
 // Finite State Machine Object
 fsm_t app_fsm;
@@ -210,7 +214,7 @@ void app_init()
 	//*******************************//
 	//*    MENU Inits START Here    *//
 	//*******************************//
-	MENU_build_node(&set_alarm_node, "A   ", NULL, NULL, &set_d_gain_node, &set_default_velocity_setpoint_node, set_alarm_handler);
+	MENU_build_node(&set_alarm_node, "A   ", NULL, NULL, &set_deacc_time_node, &set_default_velocity_setpoint_node, set_alarm_handler);
 	MENU_build_node(&set_default_velocity_setpoint_node, "P1  ", NULL, NULL, &set_alarm_node, &set_motor_operating_voltage_node, set_default_velocity_setpoint_handler);
 	MENU_build_node(&set_motor_operating_voltage_node, "P2  ", NULL, NULL, &set_default_velocity_setpoint_node, &set_encoder_max_count_node, set_motor_operating_voltage_handler);
 	MENU_build_node(&set_encoder_max_count_node, "P3  ", NULL, NULL, &set_motor_operating_voltage_node, &set_motor_gearbox_ratio_node, set_encoder_max_count_handler);
@@ -219,7 +223,9 @@ void app_init()
 	MENU_build_node(&set_motor_is_have_gearbox_node, "P6  ", NULL, NULL, &set_motor_max_velocity_node, &set_p_gain_node, set_motor_is_have_gearbox_handler);
 	MENU_build_node(&set_p_gain_node, "P7  ", NULL, NULL, &set_motor_is_have_gearbox_node, &set_i_gain_node, set_p_gain_handler);
 	MENU_build_node(&set_i_gain_node, "P8  ", NULL, NULL, &set_p_gain_node, &set_d_gain_node, set_i_gain_handler);
-	MENU_build_node(&set_d_gain_node, "P9  ", NULL, NULL, &set_i_gain_node, &set_alarm_node, set_d_gain_handler);
+	MENU_build_node(&set_d_gain_node, "P9  ", NULL, NULL, &set_i_gain_node, &set_acc_time_node, set_d_gain_handler);
+	MENU_build_node(&set_acc_time_node, "P10  ", NULL, NULL, &set_d_gain_node, &set_deacc_time_node, set_acceleration_time_handler);
+	MENU_build_node(&set_deacc_time_node, "P11  ", NULL, NULL, &set_acc_time_node, &set_alarm_node, set_deacceleration_time_handler);
 
 	config_menu = &set_alarm_node;
 	//******************************//
@@ -446,6 +452,7 @@ static void fsm_run_state(fsm_events_e e)
 		break;
 	case menu_items_state:
 		app_fsm.disp_mode = show_clock;
+		config_menu = &set_alarm_node;
 		break;
 	case menu_selected_item_state:
 	case n_states:
@@ -1371,6 +1378,130 @@ static void set_d_gain_handler(fsm_events_e e)
 
 #ifdef USE_DEBUG_CONSOLE
 	printf("Set_D_gain_handler... \r\n");
+#endif
+}
+
+static void set_acceleration_time_handler(fsm_events_e e)
+{
+	switch (e)
+	{
+	case btn_up_click_event:
+	case btn_up_long_press_event:
+		temp_dev_regs.start_stop_ramp_regs.acceleration_time++;
+		if (temp_dev_regs.start_stop_ramp_regs.acceleration_time > MAX_RAMP_TIME)
+		{
+			temp_dev_regs.start_stop_ramp_regs.acceleration_time = MAX_RAMP_TIME;
+		}
+
+		TM1637_set_mode(tm1637_mode_blinking);
+		break;
+	case btn_down_click_event:
+	case btn_down_long_press_event:
+		if (temp_dev_regs.start_stop_ramp_regs.acceleration_time > 0)
+		{
+			temp_dev_regs.start_stop_ramp_regs.acceleration_time--;
+		}
+
+		TM1637_set_mode(tm1637_mode_blinking);
+		break;
+	case btn_set_click_event:
+		if (app_fsm.prevous_state == menu_items_state)
+		{
+			/*
+			 * New settings session is initiated read current
+			 * alarm value and show on the display. Start
+			 * display blinking if alarm is disabled
+			 */
+			// Take the current value from the params
+			temp_dev_regs.start_stop_ramp_regs.acceleration_time = app_params_get_acceleration_time();
+			// There is no need to blink since some value is set, so just show the value
+			TM1637_set_mode(tm1637_mode_constant_on);
+		}
+		else
+		{
+			// Set the selected value to param
+			if(app_params_set_acceleration_time(temp_dev_regs.start_stop_ramp_regs.acceleration_time) != FLASH_COMPLETE)
+			{
+				error_handler(EEPROM_WRITE_FAILED);
+			}
+			TM1637_set_mode(tm1637_mode_constant_on);
+		}
+		break;
+	case pwr_up_event:
+	case btn_start_stop_click_event:
+	case btn_set_long_press_event:
+	case fsm_timeout_tmr_event:
+	case fsm_alarm_event:
+	case n_events:
+		break;
+	}
+
+	TM1637_display_number(temp_dev_regs.start_stop_ramp_regs.acceleration_time, COLON_OFF);
+
+#ifdef USE_DEBUG_CONSOLE
+	printf("Set_acceleration_time_handler... \r\n");
+#endif
+}
+
+static void set_deacceleration_time_handler(fsm_events_e e)
+{
+	switch (e)
+	{
+	case btn_up_click_event:
+	case btn_up_long_press_event:
+		temp_dev_regs.start_stop_ramp_regs.deacceleration_time++;
+		if (temp_dev_regs.start_stop_ramp_regs.deacceleration_time > MAX_RAMP_TIME)
+		{
+			temp_dev_regs.start_stop_ramp_regs.deacceleration_time = MAX_RAMP_TIME;
+		}
+
+		TM1637_set_mode(tm1637_mode_blinking);
+		break;
+	case btn_down_click_event:
+	case btn_down_long_press_event:
+		if (temp_dev_regs.start_stop_ramp_regs.deacceleration_time > 0)
+		{
+			temp_dev_regs.start_stop_ramp_regs.deacceleration_time--;
+		}
+
+		TM1637_set_mode(tm1637_mode_blinking);
+		break;
+	case btn_set_click_event:
+		if (app_fsm.prevous_state == menu_items_state)
+		{
+			/*
+			 * New settings session is initiated read current
+			 * alarm value and show on the display. Start
+			 * display blinking if alarm is disabled
+			 */
+			// Take the current value from the params
+			temp_dev_regs.start_stop_ramp_regs.deacceleration_time = app_params_get_deacceleration_time();
+			// There is no need to blink since some value is set, so just show the value
+			TM1637_set_mode(tm1637_mode_constant_on);
+		}
+		else
+		{
+			// Set the selected value to param
+			if(app_params_set_deacceleration_time(temp_dev_regs.start_stop_ramp_regs.deacceleration_time) != FLASH_COMPLETE)
+			{
+				error_handler(EEPROM_WRITE_FAILED);
+			}
+			TM1637_set_mode(tm1637_mode_constant_on);
+		}
+		break;
+	case pwr_up_event:
+	case btn_start_stop_click_event:
+	case btn_set_long_press_event:
+	case fsm_timeout_tmr_event:
+	case fsm_alarm_event:
+	case n_events:
+		break;
+	}
+
+	TM1637_display_number(temp_dev_regs.start_stop_ramp_regs.deacceleration_time, COLON_OFF);
+
+#ifdef USE_DEBUG_CONSOLE
+	printf("Set_deacceleration_time_handler... \r\n");
 #endif
 }
 

@@ -10,7 +10,8 @@
 uint16_t VirtAddVarTab[NumbOfVar] = {0x0001, 0x0002, 0x0003, 0x0004,
 									 0x0005, 0x0006, 0x0007, 0x0008,
 									 0x0009, 0x000A, 0x000B, 0x000C,
-									 0x000D, 0x000E, 0x000F, 0x0010, 0x0011};
+									 0x000D, 0x000E, 0x000F, 0x0010,
+									 0x0011, 0x0012};
 
 static device_registers_t params;
 
@@ -111,6 +112,15 @@ float app_params_get_I_gain()
 float app_params_get_D_gain()
 {
 	return params.d_gain;
+}
+
+uint8_t app_params_get_acceleration_time()
+{
+	return params.start_stop_ramp_regs.acceleration_time;
+}
+uint8_t app_params_get_deacceleration_time()
+{
+	return params.start_stop_ramp_regs.deacceleration_time;
 }
 
 FLASH_Status app_params_set_is_init(uint16_t ii)
@@ -221,4 +231,16 @@ FLASH_Status app_params_set_D_gain(float dg)
 		}
 	}
 	return write_status;
+}
+
+FLASH_Status app_params_set_acceleration_time(uint8_t acct)
+{
+	params.start_stop_ramp_regs.acceleration_time = acct;
+	return EE_WriteVariable(START_STOP_RAMP_START_ADR, params.start_stop_ramp);
+}
+
+FLASH_Status app_params_set_deacceleration_time(uint8_t deacct)
+{
+	params.start_stop_ramp_regs.deacceleration_time = deacct;
+	return EE_WriteVariable(START_STOP_RAMP_START_ADR, params.start_stop_ramp);
 }

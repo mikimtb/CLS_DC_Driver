@@ -14,7 +14,7 @@
 
 #define DEVICE_CONFIGURED							((uint16_t)0x59)
 
-#define DEVICE_REG_NUM								((uint8_t)0x11)
+#define DEVICE_REG_NUM								NumbOfVar
 
 #define	IS_INITIALIZED_START_ADR					((uint16_t)0x0001)
 #define DEFAULT_POSITION_SETPOINT_START_ADR			((uint16_t)0x0002)
@@ -27,6 +27,7 @@
 #define P_GAIN_START_ADR							((uint16_t)0x000C)
 #define I_GAIN_START_ADR							((uint16_t)0x000E)
 #define D_GAIN_START_ADR							((uint16_t)0x0010)
+#define START_STOP_RAMP_START_ADR					((uint16_t)0x0012)
 
 typedef enum
 {
@@ -63,6 +64,15 @@ typedef union
 		float p_gain;
 		float i_gain;
 		float d_gain;
+		union
+		{
+			uint16_t start_stop_ramp;
+			struct __attribute__((packed))
+			{
+				uint8_t acceleration_time;
+				uint8_t deacceleration_time;
+			} start_stop_ramp_regs;
+		};
 	};
 } device_registers_t;
 
@@ -81,6 +91,8 @@ bool app_params_get_is_have_gearbox_flag(void);
 float app_params_get_P_gain(void);
 float app_params_get_I_gain(void);
 float app_params_get_D_gain(void);
+uint8_t app_params_get_acceleration_time(void);
+uint8_t app_params_get_deacceleration_time(void);
 FLASH_Status app_params_set_is_init(uint16_t ii);
 FLASH_Status app_params_set_deafult_position_setpoint(int64_t dps);
 FLASH_Status app_params_set_default_velocity_setpoint(int16_t dvs);
@@ -92,5 +104,7 @@ FLASH_Status app_params_set_is_have_gearbox_flag(bool ihgf);
 FLASH_Status app_params_set_P_gain(float pg);
 FLASH_Status app_params_set_I_gain(float ig);
 FLASH_Status app_params_set_D_gain(float dg);
+FLASH_Status app_params_set_acceleration_time(uint8_t acct);
+FLASH_Status app_params_set_deacceleration_time(uint8_t deacct);
 
 #endif /* __APP_PARAMS_H */
