@@ -15,6 +15,7 @@
 #include "user_brake.h"
 #include "as5040.h"
 #include "user_pid.h"
+#include "app_params.h"
 
 #define MC_TIM					TIM2					/*!< The Timer that is used for Motion Controller interface */
 #define MC_TIM_CLK          	RCC_APB1Periph_TIM2		/*!< The Timer peripheral clock definition */
@@ -27,7 +28,7 @@
 
 #define MOVEMENT_THRESHOLD		30						/*!< Minimal movement of the motor shaft that initiates new angular velocity calculation */
 #define MAX_NUMBER_OF_CYCLES    4						/*!< Maximal number of cycles before angular velocity calculation is initiated */
-#define TIME_STAMP				0.01					/*!< Control loop time stamp in seconds */
+#define TIME_STAMP				((float)0.01)			/*!< Control loop time stamp in seconds */
 
 #define MAX_OUTPUT_VOLTAGE		((uint8_t)12)			/*!< Maximal voltage that can be generated at the output of the driver */
 #define MAX_ENC_PULSES			((uint16_t)500)			/*<! Maximal number of single pulses per revolution for the connected encoder */
@@ -60,6 +61,12 @@ typedef enum
 	ACTIVATED
 } brake_status_e;
 
+typedef enum
+{
+	RAMP_DONE = 0,
+	RAMP_ACTIVE
+} ramp_status_e;
+
 typedef struct _motor_t
 {
 	uint8_t max_voltage;
@@ -82,6 +89,8 @@ typedef struct _motion_ctrl_t
 	brake_status_e brake_status;
 	uint16_t enc_index;
 	motor_t motor;
+	float acceleration_velocity_stamp;
+	float deacceleration_velocity_stamp;
 } motion_ctrl_t;
 
 // Private functions definition

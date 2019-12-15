@@ -11,6 +11,8 @@
 static void _position_cnt(void);
 static bool _calculate_angular_velocity(int64_t current_position);
 static void _calculate_velocity_coefficients(uint8_t num_of_cycles);
+static bool _acceleration_ramp(float *ramp_calc_velocity);
+static bool _deacceleration_ramp(float *ramp_calc_velocity);
 static void _mc_rcc_config(void);
 static void _mc_tim_config(void);
 static void _mc_nvic_config(void);
@@ -27,6 +29,12 @@ static float angular_velocity_coeff[5] = { 0,00 };
  * Velocity control PID controller
  */
 static mpid_c_t v_pid;
+/*
+ * Acceleration and Deacceleration Ramp variables
+ */
+ramp_status_e acc_ramp_status = RAMP_ACTIVE;
+ramp_status_e deacc_ramp_status = RAMP_DONE;
+float temp_velocity_setpoint = 0;
 
 // IT handlers routine
 void MC_IRQHandler()
@@ -47,14 +55,30 @@ void MC_IRQHandler()
 		// Calculate and update motion parameters
 		if (m_ctrl.status == STARTED)
 		{
-			plant_error = (float)(m_ctrl.velocity_setpoint) - m_ctrl.angular_velocity;
+			if (_acceleration_ramp(&temp_velocity_setpoint))
+			{
+				plant_error = temp_velocity_setpoint - m_ctrl.angular_velocity;
+			}
+			else
+			{
+				plant_error = (float)(m_ctrl.velocity_setpoint) - m_ctrl.angular_velocity;
+			}
 			calculated_pwm_output = (int16_t)(mpid_update(&v_pid, plant_error, m_ctrl.angular_velocity));
 			motion_controller_set_pwm_duty(m_ctrl.current_pwm_duty + calculated_pwm_output);
 		}
 		else if (m_ctrl.status == STOPPED)
 		{
-			motion_controller_set_pwm_duty(0);
-			mpid_reset(&v_pid);
+			if (_deacceleration_ramp(&temp_velocity_setpoint))
+			{
+				plant_error = temp_velocity_setpoint - m_ctrl.angular_velocity;
+				calculated_pwm_output = (int16_t)(mpid_update(&v_pid, plant_error, m_ctrl.angular_velocity));
+				motion_controller_set_pwm_duty(m_ctrl.current_pwm_duty + calculated_pwm_output);
+			}
+			else
+			{
+				motion_controller_set_pwm_duty(0);
+				mpid_reset(&v_pid);
+			}
 		}
 		// Update
 
@@ -135,12 +159,14 @@ void motion_controller_init_PID_params(float p, float i, float d)
 void motion_controller_init_default_setpoints(int64_t dps, int16_t dvs)
 {
 	m_ctrl.position_setpoint = dps;
-	m_ctrl.velocity_setpoint = dvs;
+	motion_controller_set_angular_velocity_setpoint(dvs);
+	//m_ctrl.velocity_setpoint = dvs;
 
 #ifdef USE_UART_CONSOLE
 printf("Default set-points initialized...\r\n");
 #endif
 }
+
 void motion_controller_start(void)
 {
 	m_ctrl.status = STARTED;
@@ -186,6 +212,8 @@ void motion_controller_set_angular_postion_setpoint(int16_t ap_setpoint)
 }
 void motion_controller_set_angular_velocity_setpoint(int16_t av_setpoint)
 {
+	float acc_deacc_step_count;
+
 	int16_t av_setpoint_temp = av_setpoint;
 
 	if (av_setpoint_temp < 0)
@@ -195,6 +223,14 @@ void motion_controller_set_angular_velocity_setpoint(int16_t av_setpoint)
 	if (av_setpoint_temp <= m_ctrl.motor.max_velocity)
 	{
 		m_ctrl.velocity_setpoint = av_setpoint;
+
+		// Calculate acceleration ramp parameters
+		acc_deacc_step_count = (float)(app_params_get_acceleration_time()) / TIME_STAMP;
+		m_ctrl.acceleration_velocity_stamp = (float)m_ctrl.velocity_setpoint / acc_deacc_step_count;
+
+		// Calculate deacceleration ramp parameters
+		acc_deacc_step_count = (float)(app_params_get_deacceleration_time()) / TIME_STAMP;
+		m_ctrl.deacceleration_velocity_stamp = (float)m_ctrl.velocity_setpoint / acc_deacc_step_count;
 	}
 }
 int16_t motion_controller_get_angular_velocity_setpoint()
@@ -257,6 +293,70 @@ static void _calculate_velocity_coefficients(uint8_t num_of_cycles)
 		// Vcoeff = 60 / (deltaT x GEAR_RATIO x ENC_PULSE_PER_REVOLUTION)
 		angular_velocity_coeff[i-1] = 60 / ((TIME_STAMP * i) * m_ctrl.motor.gearbox_ratio * m_ctrl.motor.encoder_max_count);
 	}
+}
+
+static bool _acceleration_ramp(float *ramp_calc_velocity)
+{
+	bool result = true;
+	bool positive_ramp_done_flag;
+	bool negative_ramp_done_flag;
+
+	if (acc_ramp_status == RAMP_ACTIVE)
+	{
+		*ramp_calc_velocity += m_ctrl.acceleration_velocity_stamp;
+
+		negative_ramp_done_flag = (*ramp_calc_velocity < (float)(m_ctrl.velocity_setpoint)) && (m_ctrl.velocity_setpoint < 0);
+		positive_ramp_done_flag = (*ramp_calc_velocity > (float)(m_ctrl.velocity_setpoint)) && (m_ctrl.velocity_setpoint > 0);
+
+		if (negative_ramp_done_flag || positive_ramp_done_flag)
+		{
+			acc_ramp_status = RAMP_DONE;
+			deacc_ramp_status = RAMP_ACTIVE;
+			*ramp_calc_velocity = (float)(m_ctrl.velocity_setpoint);
+			result = false;
+		}
+	}
+	else
+	{
+		result = false;
+	}
+
+	return result;
+}
+
+static bool _deacceleration_ramp(float *ramp_calc_velocity)
+{
+	bool result = true;
+	bool positive_ramp_done_flag;
+	bool negative_ramp_done_flag;
+
+	if (deacc_ramp_status == RAMP_ACTIVE)
+	{
+		*ramp_calc_velocity -= m_ctrl.deacceleration_velocity_stamp;
+
+		negative_ramp_done_flag = (*ramp_calc_velocity > 0) && (m_ctrl.velocity_setpoint < 0);
+		positive_ramp_done_flag = (*ramp_calc_velocity < 0) && (m_ctrl.velocity_setpoint > 0);
+
+		if (negative_ramp_done_flag || positive_ramp_done_flag)
+		{
+			acc_ramp_status = RAMP_ACTIVE;
+			deacc_ramp_status = RAMP_DONE;
+			*ramp_calc_velocity = 0;
+			result = false;
+		}
+	}
+	else
+	{
+		result = false;
+	}
+
+	return result;
+
+//	acc_ramp_status = RAMP_ACTIVE;
+//	deacc_ramp_status = RAMP_DONE;
+//	*ramp_calc_velocity = 0;
+//
+//	return false;
 }
 
 static void _mc_rcc_config(void)
