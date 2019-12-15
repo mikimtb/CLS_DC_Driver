@@ -32,7 +32,7 @@ static mpid_c_t v_pid;
 void MC_IRQHandler()
 {
 	int16_t calculated_pwm_output;
-	int16_t plant_error;
+	float plant_error;
 
 	if (TIM_GetITStatus(MC_TIM, TIM_IT_Update))
 	{
@@ -47,20 +47,18 @@ void MC_IRQHandler()
 		// Calculate and update motion parameters
 		if (m_ctrl.status == STARTED)
 		{
-			plant_error = m_ctrl.velocity_setpoint - m_ctrl.angular_velocity;
+			plant_error = (float)(m_ctrl.velocity_setpoint) - m_ctrl.angular_velocity;
 			calculated_pwm_output = (int16_t)(mpid_update(&v_pid, plant_error, m_ctrl.angular_velocity));
 			motion_controller_set_pwm_duty(m_ctrl.current_pwm_duty + calculated_pwm_output);
-			//pwm_set_pulse_width(1200-800, 1200+800);
 		}
 		else if (m_ctrl.status == STOPPED)
 		{
 			motion_controller_set_pwm_duty(0);
 			mpid_reset(&v_pid);
-			//pwm_set_pulse_width(ZERO_DUTY, ZERO_DUTY);
 		}
 		// Update
 
-		//printf("[ %lu ] : %lld : %d \r\n\r\n", millis(), m_ctrl.angular_position, m_ctrl.angular_velocity);
+		printf(" %f \r\n", m_ctrl.angular_velocity);
 		/* Motion Controller loop is ending here */
 	}
 }
@@ -172,7 +170,7 @@ int64_t motion_controller_get_current_angular_position(void)
 }
 int16_t motion_controller_get_current_angular_velocity(void)
 {
-	return m_ctrl.angular_velocity;
+	return (int16_t) m_ctrl.angular_velocity;
 }
 int16_t motion_controller_get_current_pwm_duty(void)
 {
@@ -234,7 +232,7 @@ static bool _calculate_angular_velocity(int64_t current_position)
 	if((delta_position >= MOVEMENT_THRESHOLD) | (estimation_cycle >= MAX_NUMBER_OF_CYCLES))
 	{
 		// Calculate new angular velocity
-		m_ctrl.angular_velocity = (int16_t) (delta_position * angular_velocity_coeff[estimation_cycle]);
+		m_ctrl.angular_velocity = delta_position * angular_velocity_coeff[estimation_cycle];
 		// Update static variables
 		prev_position = current_position;
 		estimation_cycle = 0;

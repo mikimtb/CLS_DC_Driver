@@ -24,7 +24,7 @@ typedef struct _mpid
 }mpid_c_t;
 
 void mpid_init(mpid_c_t * plant_pid, int16_t max_out, int16_t min_out);
-float mpid_update(mpid_c_t * plant_pid, int16_t plant_error, int16_t plant_current_value);
+float mpid_update(mpid_c_t * plant_pid, float plant_error, int16_t plant_current_value);
 void mpid_reset(mpid_c_t * plant_pid);
 
 #endif /* USER_PID_H_ */

@@ -73,7 +73,7 @@ typedef struct _motor_t
 typedef struct _motion_ctrl_t
 {
 	int64_t angular_position;
-	int16_t angular_velocity;
+	float angular_velocity;
 	dir_e direction;
 	ctrl_status_e status;
 	int64_t position_setpoint;

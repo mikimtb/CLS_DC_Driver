@@ -13,7 +13,7 @@
 #include <stdbool.h>
 
 #define USE_UART_CONSOLE 1 											/*!< Define USE_UART_CONSOLE to use console port for the configurations and debug console */
-#define CONSOLE_BUFFER_SIZE	32										/*!< UART console ring buffer size definition, used on console_uart.c */
+#define CONSOLE_BUFFER_SIZE	1024										/*!< UART console ring buffer size definition, used on console_uart.c */
 
 //#define USE_DEBUG_CONSOLE 1
 //#define USE_BEEPER	1
