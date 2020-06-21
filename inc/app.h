@@ -25,7 +25,7 @@
 #define SHOW_VELOCITY_STATE_TIMEOUT_TIME			3000
 
 #define UP_DOWN_BTN_LONG_PRESS_INC_DEC_STEP			((uint8_t)10)
-#define UP_DOWN_BTN_CLICK_FLOAT_INC_DEC_STEP		((float)0.05)
+#define UP_DOWN_BTN_CLICK_FLOAT_INC_DEC_STEP		((float)0.01)
 #define UP_DOWN_BTN_LONG_PRESS_FLOAT_INC_DEC_STEP	((float)0.5)
 #define PID_GAIN_MAX								((float)30.00)
 #define MAX_RAMP_TIME								((uint8_t)10)

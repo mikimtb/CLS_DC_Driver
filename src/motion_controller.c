@@ -82,7 +82,7 @@ void MC_IRQHandler()
 		}
 		// Update
 
-		printf(" %f \r\n", m_ctrl.angular_velocity);
+		//printf(" %f \r\n", m_ctrl.angular_velocity);
 		/* Motion Controller loop is ending here */
 	}
 }

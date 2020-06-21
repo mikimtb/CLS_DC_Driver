@@ -67,7 +67,7 @@ CIRCBUFF_DEF(fsm_events_buff, EVENT_BUFFER_SIZE);
 button_t buttons[BTN_NUM] = {{"START/STOP", START_STOP_BTN_CLK, START_STOP_BTN_PORT, START_STOP_BTN_PIN, ACTIVE_LOW, 0, WAIT_FOR_PRESS, WAIT_FOR_PRESS, 40, 1000, NULL, on_btn_start_stop_click, NULL},
 							 {"UP", UP_BTN_CLK, UP_BTN_PORT, UP_BTN_PIN, ACTIVE_LOW, 0, WAIT_FOR_PRESS, WAIT_FOR_PRESS, 40, 500, NULL, on_btn_up_click, on_btn_up_long_press},
 							 {"DOWN", DOWN_BTN_CLK, DOWN_BTN_PORT, DOWN_BTN_PIN, ACTIVE_LOW, 0, WAIT_FOR_PRESS, WAIT_FOR_PRESS, 40, 500, NULL, on_btn_down_click, on_btn_down_long_press},
-							 {"SET", SET_BTN_CLK, SET_BTN_PORT, SET_BTN_PIN, ACTIVE_LOW, 0, WAIT_FOR_PRESS, WAIT_FOR_PRESS, 40, 2000, NULL, on_btn_set_click, on_btn_set_long_press}};
+							 {"SET", SET_BTN_CLK, SET_BTN_PORT, SET_BTN_PIN, ACTIVE_LOW, 0, WAIT_FOR_PRESS, WAIT_FOR_PRESS, 40, 1500, NULL, on_btn_set_click, on_btn_set_long_press}};
 
 //Tones and melodies
 static tone_t tone1[1] = {{SOUND, T_100_MS}};
